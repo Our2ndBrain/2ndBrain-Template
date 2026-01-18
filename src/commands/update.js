@@ -476,15 +476,28 @@ async function updateMemberDashboards(resolvedPath, templateRoot, options, log) 
  * @returns {Promise<string[]>} Array of member directory names
  */
 async function getMemberDirectories(inboxDir) {
-  const entries = await fs.readdir(inboxDir);
+  let entries;
+  try {
+    entries = await fs.readdir(inboxDir);
+  } catch (err) {
+    // If directory cannot be read, return empty array
+    return [];
+  }
+
   const members = [];
 
   for (const entry of entries) {
     const entryPath = path.join(inboxDir, entry);
-    const stat = await fs.stat(entryPath);
 
-    if (stat.isDirectory() && entry !== 'Agents' && !entry.startsWith('.')) {
-      members.push(entry);
+    try {
+      const stat = await fs.stat(entryPath);
+
+      if (stat.isDirectory() && entry !== 'Agents' && !entry.startsWith('.')) {
+        members.push(entry);
+      }
+    } catch (err) {
+      // Skip entries that cannot be accessed (broken symlinks, permission issues, etc.)
+      continue;
     }
   }
 

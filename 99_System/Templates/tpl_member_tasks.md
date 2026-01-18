@@ -56,7 +56,7 @@ limit 100
 
 ```tasks
 not done
-(has due date due after today) OR (tag includes #someday)
+(due after today) OR (tag includes #someday)
 tag does not include #waiting
 tag does not include #next
 heading does not include Readings
