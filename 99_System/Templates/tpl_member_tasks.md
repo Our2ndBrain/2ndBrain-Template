@@ -52,6 +52,22 @@ limit 100
 
 ---
 
+## 🔥 下一步行动 / Next Actions
+
+```tasks
+not done
+tag includes #next
+heading does not include Readings
+description regex matches /\S/
+path includes {{query.file.folder}}
+group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
+sort by priority
+sort by due date
+limit 100
+```
+
+---
+
 ## 📅 未来计划 / Future Plans
 
 ```tasks
@@ -63,22 +79,6 @@ heading does not include Readings
 description regex matches /\S/
 path includes {{query.file.folder}}
 group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
-sort by due date
-limit 100
-```
-
----
-
-## 🔥 下一步行动 / Next Actions
-
-```tasks
-not done
-tag includes #next
-heading does not include Readings
-description regex matches /\S/
-path includes {{query.file.folder}}
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
-sort by priority
 sort by due date
 limit 100
 ```

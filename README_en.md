@@ -333,8 +333,8 @@ Open your personal dashboard `10_Inbox/{your name}/01_Tasks.md`, scan each secti
 - **Immediate Action**: Uncategorized tasks, handle or add tags quickly
 - **Today's Priority**: Due today, prioritize
 - **Waiting For**: `#waiting` tasks waiting on others
-- **Future Plans**: Tasks not yet due, and all `#someday` tagged tasks (regardless of deadline)
 - **Next Actions**: Tagged `#next`, ready to start anytime
+- **Future Plans**: Tasks not yet due, and all `#someday` tagged tasks (regardless of deadline)
 - **Reading List**: Articles, books you want to read
 
 > 💡 **Daily** at least glance at "Today's Priority" and "Next Actions".

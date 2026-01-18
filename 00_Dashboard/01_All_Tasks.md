@@ -58,6 +58,24 @@ limit 100
 
 ---
 
+## 🔥 下一步行动 / Next Actions
+
+```tasks
+not done
+tag includes #next
+heading does not include Readings
+description regex matches /\S/
+path does not include Templates
+path does not include 99_System
+group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
+group by function task.file.folder.match(/10_Inbox\/([^\/]+)/)?.[1] ? (" " + task.file.folder.match(/10_Inbox\/([^\/]+)/)[1]) : "📝 NOTES"
+sort by priority
+sort by due date
+limit 100
+```
+
+---
+
 ## 📅 未来计划 / Future Plans
 
 ```tasks
@@ -71,24 +89,6 @@ path does not include Templates
 path does not include 99_System
 group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
 group by function task.file.folder.match(/10_Inbox\/([^\/]+)/)?.[1] ? (" " + task.file.folder.match(/10_Inbox\/([^\/]+)/)[1]) : "📝 NOTES"
-sort by due date
-limit 100
-```
-
----
-
-## 🔥 下一步行动 / Next Actions
-
-```tasks
-not done
-tag includes #next
-heading does not include Readings
-description regex matches /\S/
-path does not include Templates
-path does not include 99_System
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
-group by function task.file.folder.match(/10_Inbox\/([^\/]+)/)?.[1] ? (" " + task.file.folder.match(/10_Inbox\/([^\/]+)/)[1]) : "📝 NOTES"
-sort by priority
 sort by due date
 limit 100
 ```
