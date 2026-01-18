@@ -1,6 +1,6 @@
 {
     "name": "@our2ndbrain/cli",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "CLI tool for 2ndBrain - A personal knowledge management system based on PARA + C-O-R-D + Append-and-Review",
     "keywords": [
         "2ndbrain",

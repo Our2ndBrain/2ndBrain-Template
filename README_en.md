@@ -77,13 +77,23 @@ https://raw.githubusercontent.com/Our2ndBrain/2ndBrain-Template/main/README.md
 </details>
 
 <details>
-<summary><strong>📋 Already Have a Knowledge Base? Manually Integrate 2ndBrain</strong></summary>
+<summary><strong>📋 Already Have a Knowledge Base? One-Click Integration</strong></summary>
 
-If you already have an Obsidian knowledge base:
+If you already have an Obsidian knowledge base, you can run init directly:
 
-1. Copy `00_Dashboard/`, `99_System/Templates/`, `.obsidian/` to your knowledge base
-2. Create other directory structures (10_Inbox, 20_Areas, 30_Projects, etc.)
-3. If you already have `.obsidian/` config, selectively merge plugin directories
+```bash
+# Enter your existing knowledge base directory
+cd my-existing-vault
+
+# Run init command, it will intelligently merge framework files
+npx @our2ndbrain/cli@latest init
+```
+
+**Integration mode features**:
+- ✅ Only creates missing framework files and directories
+- ✅ Intelligently merges `.obsidian/` config, preserves your plugin settings
+- ✅ Never modifies your personal data (20_Areas, 30_Projects, etc.)
+- ✅ Auto-detects and skips existing content
 
 </details>
 
@@ -94,15 +104,77 @@ If you're an AI assistant helping users set up 2ndBrain, follow these steps:
 
 #### Step 1: Verify Prerequisites
 
+**1. Check Node.js**
+
 ```bash
 # Check if Node.js is available (need v16+)
 node --version
 
-# Check if Obsidian is installed (optional, user may already have it)
-# macOS
-ls /Applications/Obsidian.app
+# If not installed, guide user to install:
+# macOS: brew install node
+# Windows: Download LTS from https://nodejs.org/
+# Linux: sudo apt install nodejs npm  # Debian/Ubuntu
+```
 
-# If user doesn't have Obsidian, guide them to download from https://obsidian.md/
+**2. Check and Install Obsidian**
+
+```bash
+# Detect user OS
+case "$(uname -s)" in
+  Darwin)
+    # macOS
+    if [ ! -d "/Applications/Obsidian.app" ]; then
+      echo "Obsidian not detected, guiding installation..."
+      echo "Please visit https://obsidian.md/ to download macOS version"
+      echo "Or use Homebrew Cask: brew install --cask obsidian"
+    fi
+    ;;
+  Linux*)
+    # Linux
+    if ! command -v obsidian &> /dev/null; then
+      echo "Obsidian not detected, guiding installation..."
+      echo "Please visit https://obsidian.md/ to download AppImage version"
+      echo "Or use package manager:"
+      echo "  Arch: sudo pacman -S obsidian"
+      echo "  Fedora: sudo dnf install obsidian"
+    fi
+    ;;
+  MINGW*|MSYS*|CYGWIN*)
+    # Windows
+    if ! powershell -Command "Get-AppxPackage -Name 'Obsidian.MD'" &> /dev/null; then
+      echo "Obsidian not detected, guiding installation..."
+      echo "Please visit https://obsidian.md/ to download Windows version"
+      echo "Or use winget: winget install Obsidian.MD.Obsidian"
+    fi
+    ;;
+esac
+```
+
+**Obsidian Installation Command Reference for AI Assistants**:
+
+| OS | Method | Command |
+|----|--------|---------|
+| macOS | Homebrew | `brew install --cask obsidian` |
+| macOS | Manual | Visit https://obsidian.md/ |
+| Windows | winget | `winget install Obsidian.MD.Obsidian` |
+| Windows | Manual | Visit https://obsidian.md/ |
+| Arch Linux | pacman | `sudo pacman -S obsidian` |
+| Fedora | dnf | `sudo dnf install obsidian` |
+| Debian/Ubuntu | AppImage | Download AppImage from website |
+| Other Linux | AppImage | Visit https://obsidian.md/ |
+
+**Detection and Installation Scripts**:
+```bash
+# macOS detection
+if [ ! -d "/Applications/Obsidian.app" ]; then
+  echo "Install Obsidian: brew install --cask obsidian"
+fi
+
+# Windows detection
+winget list | findstr Obsidian || echo "Install Obsidian: winget install Obsidian.MD.Obsidian"
+
+# Linux detection
+command -v obsidian || echo "Download from https://obsidian.md/"
 ```
 
 #### Step 2: Initialize Project
@@ -459,7 +531,31 @@ During update, difference preview is shown. You can choose:
 
 **init**
 - `-f, --force`: Force overwrite existing project
+- `--reset-obsidian, --reset-obs`: Completely reset .obsidian directory (overwrites all config)
 - `-t, --template <path>`: Use custom template directory
+
+### init Command Modes
+
+The `init` command supports two modes:
+
+1. **Fresh initialization**: Create a complete project in an empty directory
+2. **Integration mode**: Intelligently merge framework files into existing knowledge base
+
+```bash
+# Fresh initialization
+mkdir my-brain && cd my-brain
+npx @our2ndbrain/cli@latest init
+
+# Integration into existing knowledge base
+cd my-existing-vault
+npx @our2ndbrain/cli@latest init
+```
+
+**Integration mode will**:
+- Only create missing framework directories (00_Dashboard, 10_Inbox, 99_System)
+- Skip existing user data directories (20_Areas, 30_Projects, etc.)
+- Intelligently merge .obsidian/ config, preserve your plugin settings
+- Add missing framework files (dashboards, templates, docs)
 
 **member**
 - `-f, --force`: Force overwrite existing member directory
@@ -468,6 +564,7 @@ During update, difference preview is shown. You can choose:
 **update**
 - `-d, --dry-run`: Preview files to update without actually executing
 - `-t, --template <path>`: Use custom template directory
+- `-y, --yes`: Auto-confirm all updates without prompting
 
 **remove**
 - `-d, --dry-run`: Preview files to remove without actually executing

@@ -564,6 +564,7 @@ npx @our2ndbrain/cli@latest init
 **update**
 - `-d, --dry-run`：预览将要更新的文件，不实际执行
 - `-t, --template <path>`：使用自定义模板目录
+- `-y, --yes`：自动确认所有更新，跳过交互式确认
 
 **remove**
 - `-d, --dry-run`：预览将要移除的文件，不实际执行
