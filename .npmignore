@@ -1,0 +1,38 @@
+# Personal Obsidian config (should not be published)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/daily-notes.json
+.obsidian/.2ndbrain-manifest.json
+
+# Development files (these are already handled by package.json "files" field,
+# but explicit ignore is safer)
+.git/
+.gitignore
+.github/
+
+# CI/CD
+.gitattributes
+
+# Documentation (already in package.json)
+# These are kept via package.json "files" field
+
+# Development configs
+.eslintrc*
+.prettierrc*
+.npmrc
+
+# Tests
+test/
+tests/
+*.test.js
+*.spec.js
+__tests__/
+
+# Build tools
+webpack.config.js
+rollup.config.js
+tsconfig.json
+
+# Misc
+*.log
+.DS_Store

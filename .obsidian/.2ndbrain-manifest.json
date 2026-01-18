@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "description": "2ndBrain Obsidian directory merge manifest",
+  "strategies": {
+    "community-plugins.json": "ARRAY_UNION",
+    "plugins": "ADD_ONLY"
+  }
+}

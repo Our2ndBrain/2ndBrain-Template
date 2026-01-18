@@ -1,0 +1,40 @@
+# Obsidian
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/daily-notes.json
+
+# Dependencies
+node_modules/
+
+# Build outputs / npm pack
+*.tgz
+package-lock.json
+
+# IDE
+.codebuddy/
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.Thumbs.db
+
+# Temp / Cache
+.tmp/
+*.log
+*.tmp
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Personal config (different for each member)
+.obsidian/daily-notes.json
+
+# Temp scripts in root directory (exclude patterns with / prefix)
+/test-*.sh
+/diagnose-*.sh

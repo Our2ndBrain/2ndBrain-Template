@@ -1,0 +1,56 @@
+{
+    "name": "@our2ndbrain/cli",
+    "version": "1.1.0",
+    "description": "CLI tool for 2ndBrain - A personal knowledge management system based on PARA + C-O-R-D + Append-and-Review",
+    "keywords": [
+        "2ndbrain",
+        "knowledge-management",
+        "obsidian",
+        "para",
+        "gtd",
+        "productivity"
+    ],
+    "author": "Our2ndBrain",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Our2ndBrain/2ndBrain-Template.git"
+    },
+    "homepage": "https://github.com/Our2ndBrain/2ndBrain-Template",
+    "bin": {
+        "2ndbrain": "bin/2ndbrain.js"
+    },
+    "main": "./src/index.js",
+    "files": [
+        "bin/",
+        "src/",
+        ".obsidian/",
+        "00_Dashboard/",
+        "10_Inbox/Agents/",
+        "99_System/",
+        "AGENTS.md",
+        "CHANGELOG.md",
+        "CLAUDE.md",
+        "LICENSE",
+        "README.md"
+    ],
+    "bugs": {
+        "url": "https://github.com/Our2ndBrain/2ndBrain-Template/issues"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "scripts": {
+        "version": "node scripts/version.js && git add CHANGELOG.md",
+        "postversion": "git push && git push --tags && npm publish"
+    },
+    "dependencies": {
+        "chalk": "^4.1.2",
+        "commander": "^12.0.0",
+        "diff": "^5.2.0",
+        "fs-extra": "^11.2.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
