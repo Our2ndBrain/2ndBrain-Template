@@ -679,9 +679,60 @@ obsidian tasks format=json  # 读取任务列表进行分析
 obsidian search query="[tag:next]" format=json  # 查找待处理任务
 ```
 
-未来计划将常用操作封装为 **Agent Skill**，让 AI Agent 自动化地与用户协作处理日程管理、任务管理和知识库管理。
-
 更多 CLI 命令参见 [Obsidian CLI 官方文档](https://obsidian.md/cli)。
+
+## 🧠 Agent Skill（OpenClaw / Cursor / Claude Code）
+
+本项目内置了 **2ndbrain Agent Skill**（`skills/2ndbrain/`），让 AI Agent 成为你的知识管理助手。安装后 Agent 能：
+
+- **记录** — 把你说的任务、想法、决策快速写入知识库
+- **处理** — 你丢过来的任何资料（文章、URL、文件），阅读、分析、总结后自动归档到 PARA 对应目录
+- **整理** — 自动分类、打标签、移动任务到正确位置
+- **回顾** — 生成每日行动计划，按优先级排序
+- **记忆** — Agent 自身的所有工作日志和产出也持久化到知识库
+
+### OpenClaw 安装
+
+把本仓库给到 OpenClaw（龙虾），它会自动识别 `skills/2ndbrain/SKILL.md` 并加载。Skill 的 frontmatter 设置了 `always: true`，加载后始终在 Agent 上下文中激活。
+
+首次使用时，Agent 会自动运行 `2ndbrain check` 检测环境，缺什么装什么。你只需要：
+
+1. 把本仓库 URL 给到 OpenClaw
+2. 告诉龙虾你要管理知识库
+3. 龙虾会自动完成安装和初始化
+
+之后你跟龙虾日常对话就行——"帮我记一下"、"帮我读这篇文章"、"整理一下任务"、"今天做什么"。
+
+### Cursor / Claude Code 安装
+
+将 `skills/2ndbrain/` 目录复制到你的 Cursor skills 目录（通常是 `~/.cursor/skills/2ndbrain/`），Cursor 会自动识别并加载。
+
+### 定时整理
+
+Agent Skill 支持通过 OpenClaw cron 设置定时任务，每天自动整理和生成日报：
+
+```bash
+openclaw cron add \
+  --name "2ndbrain-morning" \
+  --cron "0 9 * * *" \
+  --session isolated \
+  --message "你已安装 2ndbrain skill。执行每日整理并生成今日优先级 Top 3"
+```
+
+也可以用 `2ndbrain watch` 命令监听文件变化，自动触发轻量整理。
+
+### Skill 文件结构
+
+```
+skills/2ndbrain/
+├── SKILL.md                        # 主技能文件（Agent 读这个）
+└── references/
+    ├── setup.md                    # 安装引导
+    ├── operations.md               # 整理算法 + 智能日报
+    ├── scheduling.md               # 调度策略（cron + watch）
+    ├── task-conventions.md         # 任务格式约定
+    └── content-processing.md       # 内容处理 + PARA 自动归档
+```
 
 ## 🤖 AI 助手指南
 

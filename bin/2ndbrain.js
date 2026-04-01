@@ -7,7 +7,7 @@
  */
 
 const { program } = require('commander');
-const { init, update, remove, member, completion } = require('../src');
+const { init, update, remove, member, completion, check, watch } = require('../src');
 const pkg = require('../package.json');
 
 // ANSI color codes for terminal output
@@ -87,6 +87,35 @@ program
   .action(async (name, targetPath = '.', options) => {
     try {
       await member(name, targetPath, options, log);
+    } catch (err) {
+      log.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+// Check command
+program
+  .command('check [path]')
+  .description('Check environment prerequisites (Node.js, Git, Obsidian, Agent CLI)')
+  .action(async (targetPath = '.', options) => {
+    try {
+      const passed = await check(targetPath, options, log);
+      if (!passed) process.exit(1);
+    } catch (err) {
+      log.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+// Watch command
+program
+  .command('watch [path]')
+  .description('Watch To-Do files for changes and auto-trigger inbox organization')
+  .option('-i, --interval <minutes>', 'Debounce interval in minutes (default: 5)', parseInt)
+  .option('--once', 'Exit after first triggered organization')
+  .action(async (targetPath = '.', options) => {
+    try {
+      await watch(targetPath, options, log);
     } catch (err) {
       log.error(`Error: ${err.message}`);
       process.exit(1);

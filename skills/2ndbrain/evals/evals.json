@@ -1,0 +1,76 @@
+{
+  "skill_name": "2ndbrain",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我在 Windows 上设置 2ndBrain 知识库，我叫 Alice，知识库放在 D:\\Documents\\my-brain",
+      "expected_output": "Agent 运行 2ndbrain check 检测环境，引导从 GitHub 克隆安装，初始化知识库，全程不出现 PowerShell/cmd 特定命令。",
+      "files": [],
+      "expectations": [
+        "Agent 运行或提及 2ndbrain check 命令",
+        "Agent 提及 git clone 从 GitHub 克隆 CLI",
+        "Agent 提及 npm install 和 npm link",
+        "Agent 运行或提及 2ndbrain init 初始化知识库",
+        "Agent 运行或提及 2ndbrain member Alice",
+        "不出现 PowerShell（Set-Location、New-Item、$env:、Test-Path）、cmd（dir、findstr）、bat 等平台特定命令",
+        "引导用户打开 Obsidian 并信任插件"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "我的收集箱里堆了一堆任务，帮我整理一下，然后告诉我今天应该先做什么。我是 test-user，知识库在当前目录。\n\n以下是我的 10_Inbox/test-user/00_To-Do.md 文件内容：\n\n# To-Do\n\n## Readings\n\n## Inbox\n- [ ] 完成 API 文档 📅 2026-04-01\n- [x] 买牛奶 ✅ 2026-03-31\n- [ ] 重构登录模块\n- [ ] 看完《深度工作》\n- [ ] 等 Bob 回复设计稿\n- [ ] 学一下 Kubernetes\n- [ ] 项目 A 的原型设计 📅 2026-04-03\n- [ ] 给妈妈打电话\n",
+      "expected_output": "Agent 将任务从 Inbox 分类到合适的 Heading，给无标签任务加标签，归档已完成任务，然后生成今日行动计划。",
+      "files": [],
+      "expectations": [
+        "将阅读类任务移到 ## Readings 或加 #read 标签",
+        "将项目相关任务归入项目 Heading（可能新建 ## 项目A）",
+        "将等 Bob 回复设计稿标记 #waiting",
+        "将买牛奶归档到 09_Done.md",
+        "生成今日行动计划，API 文档在 Top 3 中（已过期）",
+        "不修改 01_Tasks.md 或 00_Dashboard/ 中的文件",
+        "整理前展示计划等用户确认"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "记住我们刚才讨论的架构决策：我们决定用 PostgreSQL 替换 MongoDB 作为主数据库，原因是需要事务支持和复杂查询。迁移计划分三期：第一期做读取层切换，第二期做写入层，第三期废弃旧库。以后要能找到这个决策。",
+      "expected_output": "Agent 将架构决策写入 Journal.md，格式正确，内容完整。",
+      "files": [],
+      "expectations": [
+        "写入 10_Inbox/Agents/Journal.md（追加到末尾）",
+        "使用 ### YYYY-MM-DD HH:mm 格式的标题",
+        "内容包含 PostgreSQL 替换 MongoDB 的决策",
+        "内容包含三期迁移计划",
+        "内容包含决策原因（事务支持和复杂查询）"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "帮我看看这篇文章并总结一下，我最近在研究 AI Agent 架构。文章标题是《Building Effective AI Agents》，内容要点：1) Agent 需要 tool use 能力 2) 记忆系统分短期和长期 3) 规划能力是关键 4) 反思机制提升质量。我的知识库已有 30_Projects/AI-Agent项目/ 和 20_Areas/AI技术/ 两个目录。",
+      "expected_output": "Agent 按内容处理流水线执行：创建任务 → 处理文章 → PARA路由（匹配到已有项目/领域）→ 保存笔记 → 标记完成 → 写 Journal。",
+      "files": [],
+      "expectations": [
+        "在 To-Do 中创建一条阅读任务",
+        "生成结构化笔记（包含摘要、要点、详细内容）",
+        "PARA 路由：将笔记保存到 30_Projects/AI-Agent项目/ 或 20_Areas/AI技术/（匹配到已有目录）",
+        "笔记包含来源信息和处理时间",
+        "处理完后标记 To-Do 中的任务为完成",
+        "在 Journal.md 中记录处理了什么以及保存位置"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "我刚看到一个不错的时间管理方法叫 Pomodoro Technique，帮我整理成笔记。核心要点：1) 25分钟专注+5分钟休息为一个番茄钟 2) 每4个番茄钟长休15-30分钟 3) 每天先列出任务再分配番茄钟 4) 被打断时记录打断次数。我的知识库里 40_Resources/ 下目前没有效率相关的子目录。",
+      "expected_output": "Agent 处理内容，判断这是参考资料/方法论，路由到 40_Resources/ 并创建合适的子目录。",
+      "files": [],
+      "expectations": [
+        "在 To-Do 中创建任务",
+        "生成结构化笔记",
+        "PARA 路由到 40_Resources/（可能新建子目录如 效率工具/ 或 时间管理/）",
+        "不会错误地放到 30_Projects/ 或 20_Areas/",
+        "处理完后标记任务完成",
+        "在 Journal.md 记录"
+      ]
+    }
+  ]
+}

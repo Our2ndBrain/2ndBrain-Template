@@ -7,6 +7,8 @@ const update = require('./commands/update');
 const remove = require('./commands/remove');
 const member = require('./commands/member');
 const completion = require('./commands/completion');
+const check = require('./commands/check');
+const watch = require('./commands/watch');
 
 module.exports = {
   init,
@@ -14,4 +16,6 @@ module.exports = {
   remove,
   member,
   completion,
+  check,
+  watch,
 };
