@@ -12,7 +12,8 @@ tag does not include #next
 heading does not include Readings
 description regex matches /\S/
 path includes {{query.file.folder}}
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
+filename includes To-Do
+group by heading
 sort by due date
 limit 100
 ```
@@ -30,7 +31,8 @@ tag does not include #someday
 heading does not include Readings
 description regex matches /\S/
 path includes {{query.file.folder}}
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts" 
+filename includes To-Do
+group by heading
 sort by path
 limit 100
 ```
@@ -45,7 +47,8 @@ tag includes #waiting
 heading does not include Readings
 description regex matches /\S/
 path includes {{query.file.folder}}
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
+filename includes To-Do
+group by heading
 sort by path
 limit 100
 ```
@@ -60,7 +63,8 @@ tag includes #next
 heading does not include Readings
 description regex matches /\S/
 path includes {{query.file.folder}}
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
+filename includes To-Do
+group by heading
 sort by priority
 sort by due date
 limit 100
@@ -78,7 +82,8 @@ tag does not include #next
 heading does not include Readings
 description regex matches /\S/
 path includes {{query.file.folder}}
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
+filename includes To-Do
+group by heading
 sort by due date
 limit 100
 ```
@@ -92,6 +97,7 @@ not done
 (heading includes Readings) OR (heading includes Reading) OR (tag includes #read) OR (tag includes #watch) OR (tag includes #listen)
 description regex matches /\S/
 path includes {{query.file.folder}}
+filename includes To-Do
 sort by path desc
 limit 100
 ```

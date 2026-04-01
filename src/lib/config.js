@@ -24,6 +24,7 @@ const FRAMEWORK_FILES = [
   '99_System/Templates/tpl_daily_note.md',
   '99_System/Templates/tpl_member_tasks.md',
   '99_System/Templates/tpl_member_done.md',
+  '99_System/Templates/tpl_member_todo.md',
   '99_System/Scripts/init_member.sh',
 ];
 

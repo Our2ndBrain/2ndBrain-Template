@@ -1,13 +1,14 @@
-# {{date:YYYY年MM月DD日 dddd HH:mm}}
+# {{date:YYYY-MM-DD dddd}}
 
-## 💼 Works / 工作事项
+## To-Do
 
-- [ ] 
+```tasks
+not done
+(has due date) AND (due before tomorrow)
+path includes {{query.file.folder}}
+description regex matches /\S/
+group by heading
+sort by due date
+```
 
-## 💡 Thoughts / 想法灵感
-
-- [ ] 
-
-## 📚 Readings / 阅读清单
-
-- [ ] 
+## Thoughts

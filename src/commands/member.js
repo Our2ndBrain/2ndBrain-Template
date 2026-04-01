@@ -18,6 +18,7 @@ const PLACEHOLDER = '{{MEMBER_NAME}}';
  * Member files configuration
  */
 const MEMBER_FILES = [
+  { template: 'tpl_member_todo.md', output: '00_To-Do.md' },
   { template: 'tpl_member_tasks.md', output: '01_Tasks.md' },
   { template: 'tpl_member_done.md', output: '09_Done.md' },
 ];
@@ -110,6 +111,7 @@ async function member(memberName, targetPath, options, log) {
   log.success('🎉 Member init complete!');
   log.info('');
   log.info('Created files:');
+  log.info(`  - 10_Inbox/${memberName}/00_To-Do.md (append-only task list)`);
   log.info(`  - 10_Inbox/${memberName}/01_Tasks.md (personal dashboard)`);
   log.info(`  - 10_Inbox/${memberName}/09_Done.md (done records)`);
   log.info('');

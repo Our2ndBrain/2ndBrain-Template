@@ -11,10 +11,10 @@ tag does not include #waiting
 tag does not include #next
 heading does not include Readings
 description regex matches /\S/
+path includes To-Do
 path does not include Templates
-path does not include 99_System
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
-group by function task.file.folder.match(/10_Inbox\/([^\/]+)/)?.[1] ? (" " + task.file.folder.match(/10_Inbox\/([^\/]+)/)[1]) : "📝 NOTES"
+group by filename
+group by heading
 sort by due date
 limit 100
 ```
@@ -31,10 +31,10 @@ tag does not include #waiting
 tag does not include #someday
 heading does not include Readings
 description regex matches /\S/
+path includes To-Do
 path does not include Templates
-path does not include 99_System
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
-group by function task.file.folder.match(/10_Inbox\/([^\/]+)/)?.[1] ? (" " + task.file.folder.match(/10_Inbox\/([^\/]+)/)[1]) : "📝 NOTES"
+group by filename
+group by heading
 sort by path
 limit 100
 ```
@@ -48,10 +48,10 @@ not done
 tag includes #waiting
 heading does not include Readings
 description regex matches /\S/
+path includes To-Do
 path does not include Templates
-path does not include 99_System
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
-group by function task.file.folder.match(/10_Inbox\/([^\/]+)/)?.[1] ? (" " + task.file.folder.match(/10_Inbox\/([^\/]+)/)[1]) : "📝 NOTES"
+group by filename
+group by heading
 sort by path
 limit 100
 ```
@@ -65,10 +65,10 @@ not done
 tag includes #next
 heading does not include Readings
 description regex matches /\S/
+path includes To-Do
 path does not include Templates
-path does not include 99_System
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
-group by function task.file.folder.match(/10_Inbox\/([^\/]+)/)?.[1] ? (" " + task.file.folder.match(/10_Inbox\/([^\/]+)/)[1]) : "📝 NOTES"
+group by filename
+group by heading
 sort by priority
 sort by due date
 limit 100
@@ -85,10 +85,10 @@ tag does not include #waiting
 tag does not include #next
 heading does not include Readings
 description regex matches /\S/
+path includes To-Do
 path does not include Templates
-path does not include 99_System
-group by function !task.heading.includes("Thoughts") ? " 💼 Works" : "💡 Thoughts"
-group by function task.file.folder.match(/10_Inbox\/([^\/]+)/)?.[1] ? (" " + task.file.folder.match(/10_Inbox\/([^\/]+)/)[1]) : "📝 NOTES"
+group by filename
+group by heading
 sort by due date
 limit 100
 ```
@@ -101,6 +101,8 @@ limit 100
 not done
 (heading includes Readings) OR (heading includes Reading) OR (tag includes #read) OR (tag includes #watch) OR (tag includes #listen)
 description regex matches /\S/
+path includes To-Do
+path does not include Templates
 sort by path desc
 limit 100
 ```

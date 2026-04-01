@@ -30,6 +30,9 @@
 - [核心入口](#-核心入口)
 - [Obsidian 插件配置](#-obsidian-插件配置)
 - [CLI 命令参考](#-cli-命令参考)
+- [Obsidian CLI](#-obsidian-cli)
+- [AI 助手指南](#-ai-助手指南)
+- [架构说明](#-架构说明)
 - [延伸阅读](#-延伸阅读)
 - [贡献指南](#-贡献指南)
 
@@ -194,6 +197,7 @@ npx @our2ndbrain/cli@latest member Alex
 ```
 
 这会创建：
+- `10_Inbox/Alex/00_To-Do.md` - 个人待办清单（Append-only）
 - `10_Inbox/Alex/01_Tasks.md` - 个人任务看板
 - `10_Inbox/Alex/09_Done.md` - 个人完成记录
 - `.obsidian/daily-notes.json` - 配置日记保存到该成员目录
@@ -204,6 +208,7 @@ npx @our2ndbrain/cli@latest member Alex
 
 ```bash
 ls -la 00_Dashboard/01_All_Tasks.md
+ls -la 10_Inbox/*/00_To-Do.md
 ls -la 10_Inbox/*/01_Tasks.md
 ls -la 99_System/Templates/tpl_daily_note.md
 ```
@@ -232,7 +237,7 @@ ls -la 99_System/Templates/tpl_daily_note.md
 
 #### 注意事项
 
-- 阅读 [AGENTS.md](AGENTS.md) 了解项目的 AI 助手指南
+- 阅读本文档的 [AI 助手指南](#-ai-助手指南) 了解项目约定
 - 所有任务使用格式：`- [ ] 任务描述 #标签 📅 日期`
 - 日记使用模板 `99_System/Templates/tpl_daily_note.md`
 
@@ -298,28 +303,38 @@ C-O-R-D 是 [GTD (Getting Things Done)](#gtd) 的现代轻量演进——保留�
 
 ### 1️⃣ 收集 (Collect)
 
-有什么想法、待办、灵感？先扔进今天的日记（`10_Inbox/{你的名字}/`），别管分类，先记下来。
+**记录归记录，任务归任务。**
 
-这是 **[Append-and-Review](#append-and-review)** 的核心实践：**所有内容先追加到单一收集点，不打断思考流程**。就像 Karpathy 说的，先记下来，分类和整理留到回顾时再做。
+- **想法、灵感、反思** → 写在今天的日记 `## Thoughts` 区
+- **待办任务** → 追加到 `10_Inbox/{你的名字}/00_To-Do.md` 的 `## Inbox` 区
+
+这是 **[Append-and-Review](#append-and-review)** 的核心实践：**先记下来，不打断思考流程**。通过 Obsidian CLI 可以从终端快速捕获：
+
+```bash
+# 追加想法到日记
+obsidian daily:append content="刚想到一个新点子..."
+
+# 追加任务到 To-Do（自动落入 Inbox 区域）
+obsidian append file="00_To-Do" content="- [ ] 新任务 📅 2026-04-05"
+```
 
 > 💡 **两分钟法则**：能立刻做完的就别记了，直接做掉。
->
-> 💡 **小技巧**：打开日记后，先写"今天最想推进的一件事"，启动成本一下就降下来了。
 
 ### 2️⃣ 整理 (Organize)
 
-定期回顾日记时，让任务能被"找到"：
+定期整理 To-Do 文件，让任务能被"找到"：
 
 - 打个标签：`#next`（马上做）/ `#waiting`（等别人）/ `#someday`（以后再说）
 - 有截止日期的，加上 `📅 2026-01-15`
-- 事情复杂？单独建个笔记放到 `30_Projects/`
-- 长期关注的话题？移到 `20_Areas/` 对应领域
-- 参考资料？放到 `40_Resources/` 相关分类
+- 把 `## Inbox` 中的任务移到对应项目的 Heading 下
+- 新项目？在 To-Do 文件中添加 `## 项目名` Heading，并链接到 `30_Projects/`
+- 长期关注的话题？相关笔记移到 `20_Areas/`
+- 参考资料？放到 `40_Resources/`
 
 **实际例子**：
-- 日记中写了"重构公司官网"，回顾时发现需要深入研究 → 创建 `30_Projects/网站重构/` 项目文件夹
-- 日记中记录了"基金定投策略"，这是理财领域的知识 → 移到 `20_Areas/理财/基金定投.md`
-- 日记中收藏了"番茄工作法"的笔记 → 整理到 `40_Resources/效率工具/番茄工作法.md`
+- To-Do 的 Inbox 中写了"重构公司官网"→ 在 To-Do 中新增 `## 网站重构` Heading，创建 `30_Projects/网站重构/` 项目文件夹
+- 日记中记录了"基金定投策略"→ 移到 `20_Areas/理财/基金定投.md`
+- 日记中收藏了"番茄工作法"→ 整理到 `40_Resources/效率工具/番茄工作法.md`
 
 > 💡 **养成习惯**：新任务至少打个标签或日期，不然就会变成"未分类黑洞"。
 >
@@ -327,19 +342,21 @@ C-O-R-D 是 [GTD (Getting Things Done)](#gtd) 的现代轻量演进——保留�
 
 ### 3️⃣ 回顾 (Review)
 
-靠系统做选择，别靠脑子记：
+**日记即看板**——打开今天的日记，`## To-Do` 区会自动展示：
+- 今日到期的任务
+- 过期未完成的遗留任务
 
-打开你的个人看板 `10_Inbox/{你的名字}/01_Tasks.md`，扫一眼各个区块：
+按项目 Heading 分组显示，一目了然。需要全景视图？打开个人看板 `01_Tasks.md`：
 - **立即行动**：没分类的任务，赶紧处理或打标签
 - **今日必达**：今天到期的，优先搞定
 - **等待跟进**：在等别人的 `#waiting` 任务
 - **下一步行动**：标了 `#next` 的，随时可以开干
-- **未来计划**：还没到期的任务，以及所有 `#someday` 标签的任务（无论是否有截止日期）
+- **未来计划**：还没到期的任务，以及所有 `#someday` 标签的任务
 - **阅读清单**：想看的文章、书籍
 
-> 💡 **每天**至少扫一眼"今日必达"和"下一步行动"。
+> 💡 **每天**至少看一眼日记看板。
 >
-> 💡 **每周**看看个人 `09_Done.md` 回顾成就感；顺便清理一下项目，不活跃的挪到 `90_Archives/`。
+> 💡 **每周**看看 `09_Done.md` 回顾成就感；顺便清理一下项目，不活跃的挪到 `90_Archives/`。
 
 ### 4️⃣ 执行 (Do)
 
@@ -369,13 +386,18 @@ C-O-R-D 是 [GTD (Getting Things Done)](#gtd) 的现代轻量演进——保留�
 | `#listen` | 要听的 | 播客、音频等听觉内容 |
 | `📅 YYYY-MM-DD` | 截止日期 | 必须在某天前完成 |
 
-### 特殊标题
+### To-Do 文件结构
 
-日记里用这些标题，看板会自动识别：
+每个成员的待办清单 `00_To-Do.md` 用 Headings 分区管理：
 
-- `## 💼 Works`：工作任务（外部输入、需交付的事项）
-- `## 💡 Thoughts`：想法（自驱探索、灵感，也可以带任务）
-- `## 📚 Readings`：阅读清单
+- `## Readings`：阅读/观看/收听清单（位于上方固定区域）
+- `## 项目名`：项目相关任务，用 blockquote 链接到 `30_Projects/`
+- `## Inbox`：新任务的默认着陆区（**位于文件最底部**，适配 CLI append）
+
+日记模板包含两个区域：
+
+- `## To-Do`：动态查询，展示今日到期 + 过期任务（按项目 Heading 分组）
+- `## Thoughts`：想法/灵感/反思（日记的主体）
 
 ## 📁 目录结构 (PARA)
 
@@ -388,9 +410,10 @@ C-O-R-D 是 [GTD (Getting Things Done)](#gtd) 的现代轻量演进——保留�
 │   ├── Agents/            #   AI 助手共享工作区
 │   │   └── Journal.md     #     Agent 工作日志（append-and-review）
 │   └── {成员名}/          #   每个人类成员一个子目录
-│       ├── 01_Tasks.md    #     个人任务看板
+│       ├── 00_To-Do.md    #     个人待办清单（Append-only, Inbox 在底部）
+│       ├── 01_Tasks.md    #     个人任务看板（查询视图）
 │       ├── 09_Done.md     #     个人完成记录
-│       └── 2026-01-14.md  #     日记（按日期命名）
+│       └── 2026-01-14.md  #     日记（想法 + 今日看板）
 ├── 20_Areas/              # 领域：长期关注的事（健康、财务…）
 ├── 30_Projects/           # 项目：有明确目标的事
 ├── 40_Resources/          # 资源：参考资料、方法论
@@ -424,10 +447,11 @@ C-O-R-D 是 [GTD (Getting Things Done)](#gtd) 的现代轻量演进——保留�
 |------|--------|
 | `00_Dashboard/01_All_Tasks.md` | 全局任务看板，汇总所有成员的待办 |
 | `00_Dashboard/09_All_Done.md` | 全局完成记录，回顾团队成就 |
+| `10_Inbox/{成员}/00_To-Do.md` | 个人待办清单，所有任务写在这里 |
 | `10_Inbox/{成员}/01_Tasks.md` | 个人任务看板，每天看这个 |
 | `10_Inbox/{成员}/09_Done.md` | 个人完成记录，回顾成就感 |
 | `10_Inbox/Agents/Journal.md` | Agent 工作日志，记录 AI 助手的工作 |
-| `99_System/Templates/tpl_daily_note.md` | 日记模板 |
+| `99_System/Templates/tpl_daily_note.md` | 日记模板（想法 + 今日看板） |
 
 ## 🔌 Obsidian 插件配置
 
@@ -508,7 +532,7 @@ npx @our2ndbrain/cli@latest <command>
 **框架文件包括**：
 - 文档：`AGENTS.md`、`README.md`、`CHANGELOG.md`、`CLAUDE.md`
 - 看板：`00_Dashboard/01_All_Tasks.md`、`00_Dashboard/09_All_Done.md`
-- 模板：`99_System/Templates/` 下的所有模板
+- 模板：`99_System/Templates/` 下的所有模板（含 `tpl_member_todo.md`）
 - 脚本：`99_System/Scripts/` 下的所有脚本
 - 配置：`.obsidian/` 目录（插件配置，智能合并）
 
@@ -592,6 +616,140 @@ source ~/.zshrc
 ```
 
 重新打开终端或执行 `source ~/.bashrc`（或对应 shell 配置文件）即可生效。
+
+## 🖥️ Obsidian CLI
+
+Obsidian v1.12.4+ 内置了官方命令行工具，可以从终端直接操作你的知识库。需要 Obsidian 处于运行状态。
+
+### 安装
+
+1. 更新 Obsidian 到 v1.12.4 或更高版本
+2. Settings → General → Command line interface → 启用
+3. 按照提示将 CLI 注册到系统 PATH
+
+<details>
+<summary><strong>分平台 PATH 配置</strong></summary>
+
+**macOS**（zsh）：
+```bash
+echo 'export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**macOS**（bash）：
+```bash
+echo 'export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+**Windows**：
+```
+# 系统设置 → 环境变量 → Path → 新增
+C:\Users\{用户名}\AppData\Local\Programs\Obsidian\
+```
+
+**Linux**：
+```bash
+sudo ln -s /opt/obsidian/obsidian /usr/local/bin/obsidian
+```
+
+</details>
+
+### 与 2ndBrain 配合使用
+
+| 场景 | 命令 |
+|------|------|
+| 追加任务到 To-Do | `obsidian append file="00_To-Do" content="- [ ] 新任务 📅 2026-04-05"` |
+| 追加想法到日记 | `obsidian daily:append content="刚想到一个点子..."` |
+| 查看今日日记 | `obsidian daily:read` |
+| 列出所有任务 | `obsidian tasks format=json` |
+| 搜索仓库 | `obsidian search query="关键词"` |
+| 浏览仓库（TUI 模式） | `obsidian` |
+
+> 💡 **CLI 限制**：`append` 只能追加到文件末尾，这就是为什么 To-Do 文件把 `## Inbox` 放在最底部——新任务通过 CLI 追加后自然落入 Inbox 区域。
+
+### AI Agent 集成
+
+Obsidian CLI 让 AI Agent 能够通过标准命令操作你的知识库：
+
+```bash
+# AI Agent 可以通过 CLI 协助管理任务
+obsidian append file="00_To-Do" content="- [ ] AI 建议：整理本周会议笔记 📅 2026-04-07"
+obsidian tasks format=json  # 读取任务列表进行分析
+obsidian search query="[tag:next]" format=json  # 查找待处理任务
+```
+
+未来计划将常用操作封装为 **Agent Skill**，让 AI Agent 自动化地与用户协作处理日程管理、任务管理和知识库管理。
+
+更多 CLI 命令参见 [Obsidian CLI 官方文档](https://obsidian.md/cli)。
+
+## 🤖 AI 助手指南
+
+> 本节内容面向 AI 助手（Claude、ChatGPT、Cursor 等）。当帮助用户操作本项目时，请遵循以下规则。
+
+### 核心规则
+
+1. **任务格式**：所有任务使用 `- [ ] 任务描述 #tag 📅 YYYY-MM-DD`
+2. **文件放置**：所有新内容先放 `10_Inbox/{成员}/`，明确目标的放 `30_Projects/`
+3. **不要修改看板查询**：`00_Dashboard/` 和 `01_Tasks.md` 中的 Tasks 查询块是自动生成的，只修改 To-Do 文件中的任务
+4. **使用模板创建日记**：模板位于 `99_System/Templates/tpl_daily_note.md`
+5. **任务完成**：将 `- [ ]` 改为 `- [x]`，Tasks 插件会自动添加完成日期
+6. **遵循用户语言**：匹配对话中使用的语言
+
+### Agent 协作设计
+
+AI 助手和人类在 2ndBrain 中**共存协作**。Agent 可以直接操作所有目录，使用 `10_Inbox/Agents/` 共享工作区记录工作日志。
+
+详细的 Agent 工作日志格式和协作规范参见 `10_Inbox/Agents/Journal.md`。
+
+### 工作原则
+
+1. **优先改进工具而非绕过工具**——手动操作不可复现且易出错
+2. **注意命名一致性**——工具设计应考虑命名差异，避免同步失败
+
+## 🏗️ 架构说明
+
+> 本节面向开发者和 AI 编程助手，描述 CLI 工具的内部架构。
+
+<details>
+<summary><strong>点击展开架构详情</strong></summary>
+
+### 入口
+
+- `bin/2ndbrain.js` — CLI 入口（Commander.js）
+- `src/index.js` — 主模块，导出所有命令
+
+### 核心模块
+
+| 模块 | 职责 |
+|------|------|
+| `src/lib/config.js` | 框架文件定义、目录约定、项目识别 |
+| `src/lib/files.js` | 文件操作（复制、智能比较、删除） |
+| `src/lib/diff.js` | 文件比较（使用 `diff` 包，支持行/词级比较） |
+| `src/lib/prompt.js` | 交互式提示（确认、选择、批量更新） |
+| `src/commands/init.js` | 项目初始化（验证、创建目录、复制文件） |
+| `src/commands/member.js` | 成员目录创建（模板处理、配置更新） |
+| `src/commands/update.js` | 框架文件更新（差异预览、批量/逐个模式） |
+| `src/commands/remove.js` | 框架文件移除（仅框架文件，不碰用户数据） |
+
+### 设计模式
+
+- **框架 vs 用户数据分离**：`FRAMEWORK_FILES` 由 CLI 管理，`USER_DATA_DIRS` 永不触碰
+- **模板占位符**：`{{MEMBER_NAME}}` 在 `member` 命令执行时替换
+- **智能合并**：`.obsidian/` 配置使用 manifest 驱动的合并策略（数组并集、只增不覆盖等）
+- **Dry Run 模式**：`update` 和 `remove` 支持 `--dry-run` 预览
+- **项目标识**：`AGENTS.md` 文件的存在标识一个 2ndBrain 项目
+
+### 依赖
+
+- `commander` — CLI 框架
+- `chalk` — 终端颜色
+- `fs-extra` — 增强文件系统操作
+- `diff` — 文件比较/差异生成
+
+Node.js >= 16.0.0
+
+</details>
 
 ## 📚 延伸阅读
 
