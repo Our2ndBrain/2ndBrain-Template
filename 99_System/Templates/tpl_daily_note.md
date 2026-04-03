@@ -4,9 +4,23 @@
 
 ## To-Do
 
+### Overdue
+
 ```tasks
 not done
-(has due date) AND ((due on {{date:YYYY-MM-DD}}) OR (due before {{date:YYYY-MM-DD}}))
+has due date
+due before {{date:YYYY-MM-DD}}
+path includes {{query.file.folder}}
+description regex matches /\S/
+group by heading
+sort by due date
+```
+
+### Due Today
+
+```tasks
+not done
+due on {{date:YYYY-MM-DD}}
 path includes {{query.file.folder}}
 description regex matches /\S/
 group by heading
