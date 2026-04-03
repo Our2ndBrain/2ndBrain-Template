@@ -234,6 +234,15 @@ async function copyFileWithCompare(src, dest, options = {}) {
       return { copied: false, unchanged: true };
     }
 
+    let previousDestContent = '';
+    if (comparison.exists && !comparison.binary && !comparison.large) {
+      try {
+        previousDestContent = await fs.readFile(dest, 'utf8');
+      } catch {
+        previousDestContent = '';
+      }
+    }
+
     // Perform the copy
     await fs.ensureDir(path.dirname(dest));
     await fs.copy(src, dest);
@@ -247,11 +256,8 @@ async function copyFileWithCompare(src, dest, options = {}) {
         change = { large: true };
       } else {
         try {
-          const [srcContent, destContent] = await Promise.all([
-            fs.readFile(src, 'utf8'),
-            comparison.exists ? fs.readFile(dest, 'utf8') : '',
-          ]);
-          const summary = summarizeChanges(destContent, srcContent);
+          const srcContent = await fs.readFile(src, 'utf8');
+          const summary = summarizeChanges(previousDestContent, srcContent);
           change = { added: summary.added, removed: summary.removed };
         } catch {
           // If we can't read as text, mark as binary

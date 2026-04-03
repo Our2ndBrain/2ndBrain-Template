@@ -41,6 +41,7 @@
         "node": ">=16.0.0"
     },
     "scripts": {
+        "test": "node --test",
         "version": "node scripts/version.js && git add CHANGELOG.md",
         "postversion": "git push && git push --tags && npm publish"
     },

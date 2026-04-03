@@ -166,9 +166,9 @@ async function init(targetPath, options, log) {
 
   // Scan existing directory for smart integration
   const scan = await scanExistingDirectory(resolvedPath);
-  const isIntegrateMode = !isEmpty && scan.hasFiles && !isExistingProject;
+  const isIntegrationMode = !isEmpty && scan.hasFiles && !isExistingProject;
 
-  if (isIntegrateMode) {
+  if (isIntegrationMode) {
     log.info('');
     log.info('Integration mode: Merging 2ndBrain framework into existing vault');
     if (scan.hasUserDataDirs.size > 0) {
@@ -289,7 +289,7 @@ async function init(targetPath, options, log) {
 
   // Summary
   log.info('');
-  log.success(isIntegrateMode ? '2ndBrain framework integrated!' : '2ndBrain project initialized!');
+  log.success(isIntegrationMode ? '2ndBrain framework integrated!' : '2ndBrain project initialized!');
   log.info(`  Created: ${fileResult.copied.length} files`);
   if (fileResult.unchanged.length > 0) {
     log.info(`  Skipped: ${fileResult.unchanged.length} existing files`);
