@@ -29,7 +29,7 @@ const MEMBER_FILES = [
  * @param {string} targetPath - Target project path
  * @param {Object} options - Command options
  * @param {boolean} [options.force] - Force overwrite existing member
- * @param {boolean} [options.noConfig] - Skip Obsidian config update
+ * @param {boolean} [options.config] - Whether to update Obsidian config (set false by --no-config)
  * @param {Object} log - Logger object
  */
 async function member(memberName, targetPath, options, log) {
