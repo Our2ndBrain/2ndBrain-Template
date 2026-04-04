@@ -8,6 +8,29 @@ const fs = require('fs-extra');
 const path = require('path');
 const { compareFiles, summarizeChanges, isBinaryFile, isLargeFile } = require('./diff');
 
+const README_ALIAS_FILES = new Set(['AGENTS.md', 'CLAUDE.md']);
+
+/**
+ * Resolve a template source file, falling back to README.md for symlink aliases
+ * that are not preserved by npm pack.
+ * @param {string} src - Preferred source file path
+ * @returns {Promise<string|null>} Resolved source path, or null if unavailable
+ */
+async function resolveSourcePath(src) {
+  if (await fs.pathExists(src)) {
+    return src;
+  }
+
+  if (README_ALIAS_FILES.has(path.basename(src))) {
+    const readmePath = path.join(path.dirname(src), 'README.md');
+    if (await fs.pathExists(readmePath)) {
+      return readmePath;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Copy a file from source to destination
  * @param {string} src - Source file path
@@ -31,12 +54,11 @@ async function copyFiles(files, templateRoot, targetRoot, onFile) {
   const result = { copied: [], skipped: [], errors: [] };
 
   for (const file of files) {
-    const src = path.join(templateRoot, file);
+    const src = await resolveSourcePath(path.join(templateRoot, file));
     const dest = path.join(targetRoot, file);
 
     try {
-      // Check if source exists
-      if (!await fs.pathExists(src)) {
+      if (!src) {
         result.skipped.push(file);
         if (onFile) onFile(file, 'skip', 'source not found');
         continue;
@@ -218,17 +240,18 @@ async function compareFilesWrapper(src, dest) {
  * @param {string} dest - Destination file path
  * @param {Object} options - Copy options
  * @param {boolean} [options.force] - Force copy even if equal
+ * @param {boolean} [options.dryRun] - Compare only, do not write destination
  * @returns {Promise<{copied: boolean, unchanged: boolean, error?: string, change?: any}>}
  */
 async function copyFileWithCompare(src, dest, options = {}) {
   try {
-    // Check if source exists
-    if (!await fs.pathExists(src)) {
+    const resolvedSrc = await resolveSourcePath(src);
+    if (!resolvedSrc) {
       return { copied: false, unchanged: false, error: 'source not found' };
     }
 
     // Compare files if destination exists
-    const comparison = await compareFilesWrapper(src, dest);
+    const comparison = await compareFilesWrapper(resolvedSrc, dest);
 
     if (comparison.exists && comparison.equal && !options.force) {
       return { copied: false, unchanged: true };
@@ -243,10 +266,6 @@ async function copyFileWithCompare(src, dest, options = {}) {
       }
     }
 
-    // Perform the copy
-    await fs.ensureDir(path.dirname(dest));
-    await fs.copy(src, dest);
-
     // Generate change summary
     let change = null;
     if (!comparison.equal) {
@@ -256,7 +275,7 @@ async function copyFileWithCompare(src, dest, options = {}) {
         change = { large: true };
       } else {
         try {
-          const srcContent = await fs.readFile(src, 'utf8');
+          const srcContent = await fs.readFile(resolvedSrc, 'utf8');
           const summary = summarizeChanges(previousDestContent, srcContent);
           change = { added: summary.added, removed: summary.removed };
         } catch {
@@ -265,6 +284,14 @@ async function copyFileWithCompare(src, dest, options = {}) {
         }
       }
     }
+
+    if (options.dryRun) {
+      return { copied: false, unchanged: false, change };
+    }
+
+    // Perform the copy
+    await fs.ensureDir(path.dirname(dest));
+    await fs.copy(resolvedSrc, dest);
 
     return { copied: true, unchanged: false, change };
   } catch (err) {
@@ -341,6 +368,7 @@ module.exports = {
   createFile,
   isDirEmpty,
   compareFilesWrapper,
+  resolveSourcePath,
   copyFileWithCompare,
   copyFilesSmart,
 };

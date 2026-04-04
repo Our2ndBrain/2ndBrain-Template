@@ -1,28 +1,32 @@
-name: PR CI
+name: Main Regression
 
 on:
-  pull_request:
-  merge_group:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pr-ci-${{ github.event.pull_request.number || github.ref }}
+  group: main-regression-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  pr-checks:
-    name: PR Checks (Node ${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+  smoke:
+    name: Smoke (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
         node-version:
           - 18.x
-          - 20.x
-          - 22.x
           - 24.x
     steps:
       - name: Checkout
@@ -44,5 +48,8 @@ jobs:
         run: npm test
 
       - name: Check npm package
-        if: ${{ matrix.node-version == '24.x' }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.node-version == '24.x' }}
         run: npm run pack:check
+
+      - name: Smoke install packed tarball
+        run: npm run smoke:install

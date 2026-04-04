@@ -25,7 +25,7 @@ _2ndbrain_completions() {
   local cmd="\${COMP_WORDS[1]}"
 
   # Top-level commands
-  local commands="init update remove member completion"
+  local commands="init update remove member check watch completion"
 
   case "\$cmd" in
     init)
@@ -55,6 +55,14 @@ _2ndbrain_completions() {
     member)
       COMPREPLY=( $(compgen -W "-f --force --no-config -h --help" -- "\$cur") )
       ;;
+    check)
+      COMPREPLY=( $(compgen -W "-h --help" -- "\$cur") )
+      [[ -z "\$cur" || "\$cur" != -* ]] && COMPREPLY+=( $(compgen -d -- "\$cur") )
+      ;;
+    watch)
+      COMPREPLY=( $(compgen -W "-i --interval --once -h --help" -- "\$cur") )
+      [[ -z "\$cur" || "\$cur" != -* ]] && COMPREPLY+=( $(compgen -d -- "\$cur") )
+      ;;
     completion)
       COMPREPLY=( $(compgen -W "bash zsh fish" -- "\$cur") )
       ;;
@@ -78,6 +86,8 @@ _2ndbrain() {
     'update:Update framework files from template'
     'remove:Remove framework files (preserves user data)'
     'member:Initialize a new member directory'
+    'check:Check environment prerequisites'
+    'watch:Watch To-Do files and trigger inbox organization'
     'completion:Generate shell completion script'
   )
 
@@ -122,6 +132,18 @@ _2ndbrain() {
             '1:name:' \\
             '2:path:_directories'
           ;;
+        check)
+          _arguments \\
+            '(-h --help)'{-h,--help}'[Show help]' \\
+            '1:path:_directories'
+          ;;
+        watch)
+          _arguments \\
+            '(-i --interval)'{-i,--interval}'[Debounce interval in minutes]:minutes:' \\
+            '--once[Exit after first triggered organization]' \\
+            '(-h --help)'{-h,--help}'[Show help]' \\
+            '1:path:_directories'
+          ;;
         completion)
           _arguments \\
             '1:shell:(bash zsh fish)'
@@ -144,6 +166,8 @@ complete -c 2ndbrain -n '__fish_use_subcommand' -a 'init' -d 'Initialize a new 2
 complete -c 2ndbrain -n '__fish_use_subcommand' -a 'update' -d 'Update framework files from template'
 complete -c 2ndbrain -n '__fish_use_subcommand' -a 'remove' -d 'Remove framework files'
 complete -c 2ndbrain -n '__fish_use_subcommand' -a 'member' -d 'Initialize a new member directory'
+complete -c 2ndbrain -n '__fish_use_subcommand' -a 'check' -d 'Check environment prerequisites'
+complete -c 2ndbrain -n '__fish_use_subcommand' -a 'watch' -d 'Watch To-Do files and trigger inbox organization'
 complete -c 2ndbrain -n '__fish_use_subcommand' -a 'completion' -d 'Generate shell completion script'
 
 # Global options
@@ -172,6 +196,16 @@ complete -c 2ndbrain -n '__fish_seen_subcommand_from remove' -a '(__fish_complet
 complete -c 2ndbrain -n '__fish_seen_subcommand_from member' -s f -l force -d 'Force overwrite existing member'
 complete -c 2ndbrain -n '__fish_seen_subcommand_from member' -l no-config -d 'Skip Obsidian config update'
 complete -c 2ndbrain -n '__fish_seen_subcommand_from member' -s h -l help -d 'Show help'
+
+# check options
+complete -c 2ndbrain -n '__fish_seen_subcommand_from check' -s h -l help -d 'Show help'
+complete -c 2ndbrain -n '__fish_seen_subcommand_from check' -a '(__fish_complete_directories)'
+
+# watch options
+complete -c 2ndbrain -n '__fish_seen_subcommand_from watch' -s i -l interval -d 'Debounce interval in minutes' -r
+complete -c 2ndbrain -n '__fish_seen_subcommand_from watch' -l once -d 'Exit after first triggered organization'
+complete -c 2ndbrain -n '__fish_seen_subcommand_from watch' -s h -l help -d 'Show help'
+complete -c 2ndbrain -n '__fish_seen_subcommand_from watch' -a '(__fish_complete_directories)'
 
 # completion options
 complete -c 2ndbrain -n '__fish_seen_subcommand_from completion' -a 'bash zsh fish'
