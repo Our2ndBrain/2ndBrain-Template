@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses date-based release versions: `YYYY.M.D`, `YYYY.M.D-beta.N`,
 and `YYYY.M.D-N`.
 
+## [2026.4.4] - 2026-04-04
+
+### Added
+- add dependency doctor and install guidance to setup script
+- split daily tasks into overdue and due-today views
+- add 2ndbrain Agent Skill + CLI extensions (check, watch)
+- refactor to "notes stay notes, tasks stay tasks, diary is the dashboard"
+
+### Changed
+- add todo refactor design spec
+
+### Fixed
+- pin daily note task query to note date
+- correct file diff summary and add regression tests
+
 ## [1.1.3] - 2026-01-18
 
 ### Added
