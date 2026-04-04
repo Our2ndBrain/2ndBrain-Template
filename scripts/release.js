@@ -87,7 +87,6 @@ function isValidCalendarDate(year, month, day) {
     date.getUTCDate() === day
   );
 }
-
 function parseReleaseVersion(version) {
   const releaseTag = version.startsWith('v') ? version : `v${version}`;
   const match = releaseTag.match(RELEASE_TAG_PATTERN);
@@ -100,7 +99,6 @@ function parseReleaseVersion(version) {
   if (!isValidCalendarDate(year, month, day)) {
     return null;
   }
-
   const stage = match.groups.beta ? 'beta' : match.groups.hotfix ? 'hotfix' : 'stable';
 
   return {
