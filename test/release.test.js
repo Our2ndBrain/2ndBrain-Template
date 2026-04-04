@@ -10,7 +10,9 @@ const {
   parseReleaseVersion,
   parseReleaseTags,
   resolveNextVersion,
+  resolveReleaseBranch,
   resolveReleaseDate,
+  resolveRepositoryFullName,
   assertMatchingRefs,
 } = require('../scripts/release');
 
@@ -149,4 +151,24 @@ test('release requires local main HEAD to exactly match origin/main', () => {
     () => assertMatchingRefs('abc123', 'def456'),
     /Local main must exactly match origin\/main before releasing/
   );
+});
+
+test('resolveRepositoryFullName parses common GitHub origin URLs', () => {
+  assert.equal(
+    resolveRepositoryFullName('git@github.com:Our2ndBrain/2ndBrain-Template.git'),
+    'Our2ndBrain/2ndBrain-Template'
+  );
+  assert.equal(
+    resolveRepositoryFullName('ssh://git@github.com/Our2ndBrain/2ndBrain-Template.git'),
+    'Our2ndBrain/2ndBrain-Template'
+  );
+  assert.equal(
+    resolveRepositoryFullName('https://github.com/Our2ndBrain/2ndBrain-Template.git'),
+    'Our2ndBrain/2ndBrain-Template'
+  );
+  assert.throws(() => resolveRepositoryFullName('file:///tmp/repo'), /Cannot parse/);
+});
+
+test('resolveReleaseBranch generates a version-scoped release branch name', () => {
+  assert.match(resolveReleaseBranch('2026.4.4'), /^codex\/release-2026\.4\.4-\d+$/);
 });

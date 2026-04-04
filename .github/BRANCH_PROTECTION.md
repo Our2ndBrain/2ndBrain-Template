@@ -33,11 +33,9 @@ Create a GitHub environment named `npm-release` and configure:
 
 ## Release flow
 
-1. Codex opens a normal pull request, not a draft pull request
-2. Wait for PR checks and review comments
-3. On GitHub Mobile, tap **Auto-merge** once as the final human confirmation
-4. GitHub merges automatically when required checks pass and conversations are resolved
-5. Create and push a tag such as `v1.2.3` or `v1.2.3-rc.1`
-6. Wait for `Release` preflight checks
-7. Approve the `npm-release` environment deployment
-8. Verify npm package provenance and GitHub Release artifacts
+1. Run one command from any clean local branch:
+   - `npm run release -- stable`
+   - `npm run release -- beta`
+   - `npm run release -- hotfix`
+2. The release script creates a temporary `codex/release-*` branch from `origin/main`, opens a normal ready-for-review PR, enables auto-merge, and waits for required checks plus the squash merge commit.
+3. After merge, the script retags the merge commit, dispatches `.github/workflows/release.yml` from `main`, approves `npm-release` automatically when the current `gh` user is an allowed reviewer, verifies npm/GitHub Release output, then switches back to the original branch.
