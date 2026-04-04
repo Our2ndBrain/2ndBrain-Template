@@ -222,7 +222,10 @@ echo "🛡️  Apply branch protection: $BRANCH"
 gh api \
   --method PUT \
   -H "Accept: application/vnd.github+json" \
-  "/repos/$OWNER/$REPO/branches/$BRANCH/protection" \
+  "/repos/{owner}/{repo}/branches/{branch}/protection" \
+  -F owner="$OWNER" \
+  -F repo="$REPO" \
+  -F branch="$BRANCH" \
   --input - <<JSON >/dev/null
 {
   "required_status_checks": { "strict": true, "checks": $CHECKS_JSON },
