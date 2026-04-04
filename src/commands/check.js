@@ -10,6 +10,8 @@ const fs = require('fs');
 const path = require('path');
 const { is2ndBrainProject } = require('../lib/config');
 
+const MIN_NODE_MAJOR = 18;
+
 function commandExists(cmd) {
   try {
     const isWin = process.platform === 'win32';
@@ -87,12 +89,12 @@ async function check(targetPath, _options, log) {
   // 1. Node.js version
   const nodeVersion = process.version;
   const nodeMajor = parseInt(nodeVersion.slice(1).split('.')[0], 10);
-  if (nodeMajor >= 16) {
+  if (nodeMajor >= MIN_NODE_MAJOR) {
     results.push({ ok: true, label: `Node.js ${nodeVersion}` });
   } else {
     results.push({
       ok: false,
-      label: `Node.js ${nodeVersion} (需要 >= 16)`,
+      label: `Node.js ${nodeVersion} (需要 >= ${MIN_NODE_MAJOR})`,
       hint: getNodeInstallHint(),
     });
     allPassed = false;
@@ -191,3 +193,7 @@ async function check(targetPath, _options, log) {
 }
 
 module.exports = check;
+module.exports.MIN_NODE_MAJOR = MIN_NODE_MAJOR;
+module.exports.commandExists = commandExists;
+module.exports.getCommandVersion = getCommandVersion;
+module.exports.checkObsidianInstalled = checkObsidianInstalled;

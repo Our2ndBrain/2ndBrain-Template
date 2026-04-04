@@ -1,0 +1,236 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to validate or publish, for example v1.2.3 or v1.2.3-rc.1
+        required: true
+        type: string
+      publish:
+        description: Publish to npm and GitHub Release after preflight succeeds
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24.x
+
+jobs:
+  preflight:
+    name: Release Preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      release-tag: ${{ steps.release-meta.outputs.release-tag }}
+      artifact-name: ${{ steps.release-meta.outputs.artifact-name }}
+    steps:
+      - name: Resolve release metadata
+        id: release-meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            release_tag="$INPUT_TAG"
+          else
+            release_tag="$REF_NAME"
+          fi
+
+          if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "Invalid release tag: $release_tag" >&2
+            exit 1
+          fi
+
+          printf 'release-tag=%s\n' "$release_tag" >> "$GITHUB_OUTPUT"
+          printf 'artifact-name=2ndbrain-release-%s\n' "$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout release tag
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: refs/tags/${{ steps.release-meta.outputs.release-tag }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Check npm package
+        run: npm run pack:check
+
+      - name: Validate release metadata
+        env:
+          RELEASE_TAG: ${{ steps.release-meta.outputs.release-tag }}
+          RELEASE_MAIN_REF: origin/main
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          npm run release:check
+
+      - name: Ensure npm version is not already published
+        run: |
+          set -euo pipefail
+          package_name="$(node -p "require('./package.json').name")"
+          package_version="$(node -p "require('./package.json').version")"
+          if npm view "${package_name}@${package_version}" version >/dev/null 2>&1; then
+            echo "${package_name}@${package_version} is already published." >&2
+            exit 1
+          fi
+
+      - name: Pack release tarball
+        id: pack
+        env:
+          RELEASE_TAG: ${{ steps.release-meta.outputs.release-tag }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          artifact_dir="$RUNNER_TEMP/release-artifact"
+          rm -rf "$artifact_dir"
+          mkdir -p "$artifact_dir"
+
+          npm pack --json --pack-destination "$artifact_dir" | tee "$artifact_dir/pack.json"
+          node - "$artifact_dir/pack.json" <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('fs');
+          const pack = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'))[0];
+          if (!pack || typeof pack.filename !== 'string') {
+            throw new Error('npm pack did not return filename');
+          }
+          process.stdout.write(`tarball-path=${pack.filename}\n`);
+          NODE
+
+          printf '%s\n' "$RELEASE_TAG" > "$artifact_dir/release-tag.txt"
+          printf '%s\n' "$(git rev-parse HEAD)" > "$artifact_dir/release-sha.txt"
+          printf 'artifact-dir=%s\n' "$artifact_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release preflight artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        with:
+          name: ${{ steps.release-meta.outputs.artifact-name }}
+          path: ${{ steps.pack.outputs.artifact-dir }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish Release
+    needs: preflight
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm-release
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: refs/tags/${{ needs.preflight.outputs.release-tag }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Download preflight artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ${{ needs.preflight.outputs.artifact-name }}
+          path: release-artifact
+
+      - name: Verify preflight artifact
+        id: artifact
+        env:
+          RELEASE_TAG: ${{ needs.preflight.outputs.release-tag }}
+        run: |
+          set -euo pipefail
+          expected_sha="$(git rev-parse HEAD)"
+          artifact_tag="$(tr -d '\r\n' < release-artifact/release-tag.txt)"
+          artifact_sha="$(tr -d '\r\n' < release-artifact/release-sha.txt)"
+
+          if [[ "$artifact_tag" != "$RELEASE_TAG" ]]; then
+            echo "Artifact tag mismatch: expected $RELEASE_TAG, got $artifact_tag" >&2
+            exit 1
+          fi
+
+          if [[ "$artifact_sha" != "$expected_sha" ]]; then
+            echo "Artifact SHA mismatch: expected $expected_sha, got $artifact_sha" >&2
+            exit 1
+          fi
+
+          tarball_path="$(find release-artifact -maxdepth 1 -type f -name '*.tgz' | sort | tail -n 1)"
+          if [[ -z "$tarball_path" ]]; then
+            echo "Release tarball not found in preflight artifact." >&2
+            ls -la release-artifact >&2
+            exit 1
+          fi
+
+          printf 'tarball-path=%s\n' "$tarball_path" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure npm version is not already published
+        run: |
+          set -euo pipefail
+          package_name="$(node -p "require('./package.json').name")"
+          package_version="$(node -p "require('./package.json').version")"
+          if npm view "${package_name}@${package_version}" version >/dev/null 2>&1; then
+            echo "${package_name}@${package_version} is already published." >&2
+            exit 1
+          fi
+
+      - name: Publish npm package with provenance
+        run: npm publish "${{ steps.artifact.outputs.tarball-path }}" --access public --provenance
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.preflight.outputs.release-tag }}
+          TARBALL_PATH: ${{ steps.artifact.outputs.tarball-path }}
+        run: |
+          set -euo pipefail
+          release_notes="$(mktemp)"
+          node - "$RELEASE_TAG" > "$release_notes" <<'NODE'
+          const fs = require('fs');
+          const tag = process.argv[2];
+          const version = tag.replace(/^v/, '');
+          const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+          const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const pattern = new RegExp(`^## \\[${escaped}\\] - .*?\\n([\\s\\S]*?)(?=\\n## \\[|\\s*$)`, 'm');
+          const match = changelog.match(pattern);
+          if (match && match[1].trim()) {
+            process.stdout.write(match[1].trim() + '\n');
+          } else {
+            process.stdout.write(`Automated release for ${tag}\n`);
+          }
+          NODE
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --notes-file "$release_notes"
+            gh release upload "$RELEASE_TAG" "$TARBALL_PATH" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$TARBALL_PATH" --title "$RELEASE_TAG" --notes-file "$release_notes"
+          fi

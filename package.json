@@ -38,12 +38,15 @@
         "url": "https://github.com/Our2ndBrain/2ndBrain-Template/issues"
     },
     "engines": {
-        "node": ">=16.0.0"
+        "node": ">=18.0.0"
     },
     "scripts": {
+        "lint": "node scripts/lint.js && node scripts/check-workflow-pinning.js",
+        "pack:check": "node scripts/check-package.js",
+        "release:check": "node scripts/check-release.js",
+        "smoke:install": "node scripts/smoke-install.js",
         "test": "node --test",
-        "version": "node scripts/version.js && git add CHANGELOG.md",
-        "postversion": "git push && git push --tags && npm publish"
+        "version": "node scripts/version.js && git add CHANGELOG.md"
     },
     "dependencies": {
         "chalk": "^4.1.2",

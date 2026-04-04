@@ -107,7 +107,7 @@ If you're an AI assistant helping users set up 2ndBrain, follow these steps:
 **1. Check Node.js**
 
 ```bash
-# Check if Node.js is available (need v16+)
+# Check if Node.js is available (need v18+)
 node --version
 
 # If not installed, guide user to install:

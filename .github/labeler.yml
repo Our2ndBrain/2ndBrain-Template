@@ -1,0 +1,32 @@
+area:automation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "scripts/**"
+
+area:cli:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "bin/**"
+          - "src/**"
+          - "test/**"
+          - "package.json"
+          - "package-lock.json"
+
+area:docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.md"
+          - ".github/*.md"
+
+area:obsidian:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".obsidian/**"
+
+area:templates:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "00_Dashboard/**"
+          - "10_Inbox/**"
+          - "99_System/**"

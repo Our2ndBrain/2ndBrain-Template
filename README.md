@@ -110,7 +110,7 @@ npx @our2ndbrain/cli@latest init
 **1. 检查 Node.js**
 
 ```bash
-# 检查 Node.js 是否可用（需要 v16+）
+# 检查 Node.js 是否可用（需要 v18+）
 node --version
 
 # 如果未安装，引导用户安装：
@@ -798,7 +798,7 @@ AI 助手和人类在 2ndBrain 中**共存协作**。Agent 可以直接操作所
 - `fs-extra` — 增强文件系统操作
 - `diff` — 文件比较/差异生成
 
-Node.js >= 16.0.0
+Node.js >= 18.0.0
 
 </details>
 
