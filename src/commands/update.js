@@ -13,7 +13,12 @@ const {
   SMART_COPY_DIRS,
   is2ndBrainProject,
 } = require('../lib/config');
-const { copyFilesSmart, copyFileWithCompare, createFile } = require('../lib/files');
+const {
+  copyFilesSmart,
+  copyFileWithCompare,
+  createFile,
+  resolveSourcePath,
+} = require('../lib/files');
 const { generateDiff, formatDiffForTerminal, areContentsEqual, isBinaryFile, isLargeFile, LARGE_FILE_THRESHOLD } = require('../lib/diff');
 const { confirm, confirmBatchUpdates, confirmFile, confirmBinaryFile, confirmLargeFile } = require('../lib/prompt');
 const { copyObsidianDirSmart, MERGE_STRATEGIES } = require('../lib/obsidian');
@@ -214,11 +219,12 @@ async function performUpdate(resolvedPath, templateRoot, options, log) {
     // Apply all changes
     for (const change of changes) {
       const src = path.join(templateRoot, change.file);
+      const resolvedSrc = await resolveTemplateSourcePath(src, change.file);
       const dest = path.join(resolvedPath, change.file);
 
       // Handle special cases
       if (change.large && !options.yes) {
-        const stats = await fs.stat(src);
+        const stats = await fs.stat(resolvedSrc);
         const confirmed = await confirmLargeFile(change.file, stats.size);
         if (!confirmed) {
           log.warn(`  ~ ${change.file} (skipped)`);
@@ -240,11 +246,12 @@ async function performUpdate(resolvedPath, templateRoot, options, log) {
     for (const change of changes) {
       const file = change.file;
       const src = path.join(templateRoot, file);
+      const resolvedSrc = await resolveTemplateSourcePath(src, file);
       const dest = path.join(resolvedPath, file);
 
       // Handle special files
       if (change.large) {
-        const stats = await fs.stat(src);
+        const stats = await fs.stat(resolvedSrc);
         const confirmed = await confirmLargeFile(file, stats.size);
         if (!confirmed) {
           log.warn(`  ~ ${file} (skipped)`);
@@ -272,7 +279,7 @@ async function performUpdate(resolvedPath, templateRoot, options, log) {
 
       const [oldContent, newContent] = await Promise.all([
         fs.readFile(dest, 'utf8').catch(() => ''),
-        fs.readFile(src, 'utf8'),
+        fs.readFile(resolvedSrc, 'utf8'),
       ]);
 
       const diffText = generateDiff(oldContent, newContent, file, file);
@@ -298,6 +305,20 @@ async function performUpdate(resolvedPath, templateRoot, options, log) {
 
   // Now update member dashboards
   await updateMemberDashboards(resolvedPath, templateRoot, options, log);
+}
+
+/**
+ * Resolve the actual template source path for a framework file.
+ * @param {string} src - Preferred source file path
+ * @param {string} file - Relative framework file path for error messages
+ * @returns {Promise<string>} Resolved source file path
+ */
+async function resolveTemplateSourcePath(src, file) {
+  const resolvedSrc = await resolveSourcePath(src);
+  if (!resolvedSrc) {
+    throw new Error(`Template source file not found: ${file}`);
+  }
+  return resolvedSrc;
 }
 
 /**

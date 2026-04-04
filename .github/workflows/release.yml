@@ -60,9 +60,11 @@ jobs:
             npm_dist_tag="next"
           fi
 
-          printf 'release-tag=%s\n' "$release_tag" >> "$GITHUB_OUTPUT"
-          printf 'artifact-name=2ndbrain-release-%s\n' "$release_tag" >> "$GITHUB_OUTPUT"
-          printf 'npm-dist-tag=%s\n' "$npm_dist_tag" >> "$GITHUB_OUTPUT"
+          {
+            printf 'release-tag=%s\n' "$release_tag"
+            printf 'artifact-name=2ndbrain-release-%s\n' "$release_tag"
+            printf 'npm-dist-tag=%s\n' "$npm_dist_tag"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Checkout release tag
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
