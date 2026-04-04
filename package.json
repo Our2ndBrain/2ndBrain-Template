@@ -24,10 +24,7 @@
     "files": [
         "bin/",
         "src/",
-        ".obsidian/",
-        "00_Dashboard/",
-        "10_Inbox/Agents/",
-        "99_System/",
+        "template/",
         "AGENTS.md",
         "CHANGELOG.md",
         "CLAUDE.md",
