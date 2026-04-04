@@ -440,6 +440,8 @@ function findReleaseWorkflowRun(releaseTag, mergeCommitSha, repositoryFullName) 
       '-f',
       'event=push',
       '-f',
+      `head_sha=${mergeCommitSha}`,
+      '-f',
       'per_page=100',
     ])
   );
