@@ -13,6 +13,7 @@ const {
   resolveReleaseBranch,
   resolveReleaseDate,
   resolveRepositoryFullName,
+  resolveReleaseWorkflowRun,
   assertMatchingRefs,
 } = require('../scripts/release');
 
@@ -171,4 +172,53 @@ test('resolveRepositoryFullName parses common GitHub origin URLs', () => {
 
 test('resolveReleaseBranch generates a version-scoped release branch name', () => {
   assert.match(resolveReleaseBranch('2026.4.4'), /^codex\/release-2026\.4\.4-\d+$/);
+});
+
+test('resolveReleaseWorkflowRun prefers the push-triggered run for the published tag', () => {
+  assert.deepEqual(
+    resolveReleaseWorkflowRun(
+      [
+        {
+          id: 101,
+          event: 'workflow_dispatch',
+          head_branch: 'main',
+          head_sha: 'abc123',
+          html_url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/101',
+        },
+        {
+          id: 102,
+          event: 'push',
+          head_branch: 'v2026.4.4',
+          head_sha: 'abc123',
+          html_url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/102',
+        },
+      ],
+      'v2026.4.4',
+      'abc123'
+    ),
+    {
+      id: 102,
+      event: 'push',
+      head_branch: 'v2026.4.4',
+      head_sha: 'abc123',
+      html_url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/102',
+    }
+  );
+
+  assert.equal(
+    resolveReleaseWorkflowRun(
+      [
+        {
+          id: 103,
+          event: 'push',
+          head_branch: 'v2026.4.3',
+          head_sha: 'def456',
+          html_url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/103',
+        },
+      ],
+      'v2026.4.4',
+      'abc123'
+    ),
+    null
+  );
 });
