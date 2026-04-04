@@ -10,7 +10,8 @@ const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const pkg = require('../package.json');
-const RELEASE_TAG_PATTERN = /^v\d+\.\d+\.\d+(?:-rc\.\d+)?$/;
+const RELEASE_TAG_PATTERN =
+  /^v\d{4}\.[1-9]\d*\.[1-9]\d*(?:-(?:[1-9]\d*|beta\.[1-9]\d*))?$/;
 
 function git(args) {
   return execFileSync('git', args, {
@@ -27,7 +28,7 @@ function fail(message) {
 
 function assertTagFormat(tag) {
   if (!RELEASE_TAG_PATTERN.test(tag)) {
-    fail(`Invalid release tag: ${tag}. Expected vX.Y.Z or vX.Y.Z-rc.N`);
+    fail(`Invalid release tag: ${tag}. Expected vYYYY.M.D, vYYYY.M.D-N, or vYYYY.M.D-beta.N`);
   }
 }
 
@@ -89,4 +90,16 @@ function main() {
   console.log(`Release metadata check passed for ${releaseTag}`);
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  RELEASE_TAG_PATTERN,
+  assertTagFormat,
+  assertPackageVersion,
+  assertChangelogEntry,
+  assertTagPointsToHead,
+  assertReleaseCommitOnMain,
+  main,
+};

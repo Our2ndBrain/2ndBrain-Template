@@ -164,7 +164,8 @@ function formatCategories(categories) {
  * Check if a version already exists in the changelog
  */
 function versionExists(content, version) {
-  const regex = new RegExp(`^## \\[${version}\\] -`, 'm');
+  const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`^## \\[${escapedVersion}\\] -`, 'm');
   return regex.test(content);
 }
 
@@ -178,7 +179,7 @@ function removeDuplicateVersions(content) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const versionMatch = line.match(/^## \[([\d.]+)\] - /);
+    const versionMatch = line.match(/^## \[([^\]]+)\] - /);
 
     if (versionMatch) {
       const version = versionMatch[1];

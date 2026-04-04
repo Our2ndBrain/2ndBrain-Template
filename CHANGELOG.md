@@ -3,7 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project uses date-based release versions: `YYYY.M.D`, `YYYY.M.D-beta.N`,
+and `YYYY.M.D-N`.
 
 ## [1.1.3] - 2026-01-18
 
@@ -64,4 +65,3 @@ A personal knowledge management system CLI tool combining PARA, C-O-R-D, and App
 ### Removed
 - Bundled dataview plugin (now community plugin)
 - README_zh.md (consolidated into README.md)
-
