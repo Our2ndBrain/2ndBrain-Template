@@ -43,6 +43,7 @@
     "scripts": {
         "lint": "node scripts/lint.js && node scripts/check-workflow-pinning.js",
         "pack:check": "node scripts/check-package.js",
+        "release": "node scripts/release.js",
         "release:check": "node scripts/check-release.js",
         "smoke:install": "node scripts/smoke-install.js",
         "test": "node --test",
@@ -51,8 +52,8 @@
     "dependencies": {
         "chalk": "^4.1.2",
         "commander": "^12.0.0",
-        "diff": "^5.2.0",
-        "fs-extra": "^11.2.0"
+        "diff": "^8.0.4",
+        "fs-extra": "^11.3.4"
     },
     "publishConfig": {
         "access": "public"

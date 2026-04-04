@@ -19,3 +19,5 @@ The workflows in this directory are split so pull requests get fast review signa
 ## Release
 
 - `release.yml` validates tag/version/changelog metadata, builds a publish tarball, waits for `npm-release` environment approval, publishes to npm with provenance, and creates or updates the GitHub Release.
+- Release operators run one local command from `main`: `npm run release -- stable`, `npm run release -- beta`, or `npm run release -- hotfix`.
+- Local release versions use date-based tags: `vYYYY.M.D`, `vYYYY.M.D-beta.N`, and `vYYYY.M.D-N`. The release script updates `package.json`, generates `CHANGELOG.md`, creates the version commit/tag, and pushes both refs so CI can publish.

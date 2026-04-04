@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to validate or publish, for example v1.2.3 or v1.2.3-rc.1
+        description: Release tag to validate or publish, for example v2026.4.4, v2026.4.4-1, or v2026.4.4-beta.1
         required: true
         type: string
       publish:
@@ -50,13 +50,13 @@ jobs:
             release_tag="$REF_NAME"
           fi
 
-          if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+          if [[ ! "$release_tag" =~ ^v[0-9]{4}\.[1-9][0-9]*\.[1-9][0-9]*(-([1-9][0-9]*|beta\.[1-9][0-9]*))?$ ]]; then
             echo "Invalid release tag: $release_tag" >&2
             exit 1
           fi
 
           npm_dist_tag="latest"
-          if [[ "$release_tag" =~ -rc\.[0-9]+$ ]]; then
+          if [[ "$release_tag" =~ -beta\.[1-9][0-9]*$ ]]; then
             npm_dist_tag="next"
           fi
 
