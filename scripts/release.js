@@ -63,16 +63,30 @@ function parseArgs(argv) {
 
 function resolveReleaseDate(env = process.env, now = new Date()) {
   const dateVersion = env.RELEASE_DATE || `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()}`;
+  const match = dateVersion.match(DATE_VERSION_PATTERN);
 
-  if (!DATE_VERSION_PATTERN.test(dateVersion)) {
+  if (!match) {
     throw new Error(
       `Invalid release date "${dateVersion}". Expected YYYY.M.D with no zero-padded month/day.`
     );
   }
 
+  const { year, month, day } = match.groups;
+  if (!isValidCalendarDate(Number(year), Number(month), Number(day))) {
+    throw new Error(`Invalid release date "${dateVersion}". Expected a real calendar date.`);
+  }
+
   return dateVersion;
 }
 
+function isValidCalendarDate(year, month, day) {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() + 1 === month &&
+    date.getUTCDate() === day
+  );
+}
 function parseReleaseVersion(version) {
   const releaseTag = version.startsWith('v') ? version : `v${version}`;
   const match = releaseTag.match(RELEASE_TAG_PATTERN);
@@ -82,6 +96,9 @@ function parseReleaseVersion(version) {
   }
 
   const [year, month, day] = match.groups.base.split('.').map(Number);
+  if (!isValidCalendarDate(year, month, day)) {
+    return null;
+  }
   const stage = match.groups.beta ? 'beta' : match.groups.hotfix ? 'hotfix' : 'stable';
 
   return {
@@ -289,6 +306,7 @@ module.exports = {
   DATE_VERSION_PATTERN,
   RELEASE_TAG_PATTERN,
   parseArgs,
+  isValidCalendarDate,
   parseReleaseVersion,
   parseReleaseTags,
   compareReleaseVersions,

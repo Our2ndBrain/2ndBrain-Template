@@ -5,6 +5,7 @@ const {
   DATE_VERSION_PATTERN,
   RELEASE_TAG_PATTERN,
   assertMonotonicVersion,
+  isValidCalendarDate,
   parseArgs,
   parseReleaseVersion,
   parseReleaseTags,
@@ -18,6 +19,10 @@ test('release date format requires YYYY.M.D without zero-padded month/day', () =
   assert.equal(DATE_VERSION_PATTERN.test('2026.12.31'), true);
   assert.equal(DATE_VERSION_PATTERN.test('2026.04.04'), false);
   assert.equal(DATE_VERSION_PATTERN.test('26.4.4'), false);
+  assert.equal(isValidCalendarDate(2026, 4, 30), true);
+  assert.equal(isValidCalendarDate(2024, 2, 29), true);
+  assert.equal(isValidCalendarDate(2025, 2, 29), false);
+  assert.equal(isValidCalendarDate(2026, 13, 1), false);
 });
 
 test('release tag parser accepts stable, beta, and hotfix tags only', () => {
@@ -48,6 +53,8 @@ test('release tag parser accepts stable, beta, and hotfix tags only', () => {
     hotfix: null,
   });
   assert.equal(parseReleaseVersion('1.1.3'), null);
+  assert.equal(parseReleaseVersion('2026.13.40'), null);
+  assert.equal(parseReleaseVersion('2025.2.29'), null);
 });
 
 test('release argument parser supports stable, beta, hotfix, and --dry-run', () => {
@@ -68,6 +75,10 @@ test('resolveReleaseDate uses local calendar date and supports RELEASE_DATE over
   assert.throws(
     () => resolveReleaseDate({ RELEASE_DATE: '2026-12-31' }),
     /Invalid release date/
+  );
+  assert.throws(
+    () => resolveReleaseDate({ RELEASE_DATE: '2026.13.40' }),
+    /Expected a real calendar date/
   );
 });
 
