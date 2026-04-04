@@ -12,11 +12,12 @@ setup-auto-merge.sh
 2) 配置分支保护（required checks + required approvals）
 
 USAGE
-  bash .ci/github/setup-auto-merge.sh --checks "CI / test,CI / lint,Codex Review" [options]
+  bash .ci/github/setup-auto-merge.sh --checks "CI / test" [options]
 
 REQUIRED
-  --checks <csv>         必填。逗号分隔的 required check 名称。
-                         示例："CI / test,CI / lint,Codex Review"
+  --checks <csv>         必填。逗号分隔的 required status check 名称。
+                         名称必须与 PR 页面 Checks 区域显示的 job 名称一致。
+                         示例："CI / test"
 
 OPTIONS
   --repo <owner/name>    可选。目标仓库，默认自动检测当前 git 仓库。
@@ -55,7 +56,7 @@ WHAT THIS SCRIPT CHANGES
 EXAMPLES
   # 最简用法（自动识别当前仓库，分支 main，审批 1）
   bash .ci/github/setup-auto-merge.sh \
-    --checks "CI / test,CI / lint,Codex Review"
+    --checks "CI / test"
 
   # 指定仓库和分支
   bash .ci/github/setup-auto-merge.sh \
@@ -63,7 +64,7 @@ EXAMPLES
     --branch main \
     --approvals 2 \
     --merge squash \
-    --checks "CI / test,CI / lint,Codex Review"
+    --checks "CI / test"
 
 AFTER SETUP
   这个脚本只配置“自动合并能力”和“保护规则”。
@@ -76,6 +77,8 @@ AFTER SETUP
 
 TIPS
   - --checks 名称必须与 GitHub Checks 页面显示的名称完全一致。
+  - Codex Review 更适合当作 PR review/comment 流程接入，不建议在这里先硬写进 required status checks；
+    若未来 Codex 在你的 PR 上有稳定 check 名称，再把该名称追加到 --checks。
   - 若仓库启用了 Rulesets 而不是传统 branch protection，规则可能冲突，需要在 GitHub 后台统一配置。
 HELP
 }
@@ -186,7 +189,7 @@ if [[ -z "$REPO_SLUG" ]]; then
 fi
 
 if [[ -z "$CHECKS_CSV" ]]; then
-  echo "❌ --checks is required, e.g. --checks \"CI / test,Codex Review\""
+  echo "❌ --checks is required, e.g. --checks \"CI / test\""
   echo
   usage
   exit 1
