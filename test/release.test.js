@@ -8,6 +8,7 @@ const {
   parseReleaseTags,
   resolveNextVersion,
   resolveReleaseDate,
+  assertMatchingRefs,
 } = require('../scripts/release');
 
 test('release date format requires YYYY.M.D without zero-padded month/day', () => {
@@ -78,5 +79,13 @@ test('resolveNextVersion rejects conflicting same-day release lanes', () => {
   assert.throws(
     () => resolveNextVersion('beta', '2026.4.4', ['v2026.4.4']),
     /Cannot create 2026.4.4-beta.N after a same-day stable release/
+  );
+});
+
+test('release requires local main HEAD to exactly match origin/main', () => {
+  assert.doesNotThrow(() => assertMatchingRefs('abc123', 'abc123'));
+  assert.throws(
+    () => assertMatchingRefs('abc123', 'def456'),
+    /Local main must exactly match origin\/main before releasing/
   );
 });

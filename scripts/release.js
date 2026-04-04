@@ -141,15 +141,18 @@ function assertCleanWorktree() {
   }
 }
 
-function assertMainContainsOriginMain() {
-  try {
-    execFileSync('git', ['merge-base', '--is-ancestor', 'origin/main', 'HEAD'], {
-      cwd: repoRoot,
-      stdio: 'ignore',
-    });
-  } catch {
-    throw new Error('Local main does not contain origin/main. Pull/rebase before releasing.');
+function assertMatchingRefs(localHead, remoteMain) {
+  if (localHead !== remoteMain) {
+    throw new Error(
+      'Local main must exactly match origin/main before releasing. Pull/rebase or push local commits first.'
+    );
   }
+}
+
+function assertMainMatchesOriginMain() {
+  const localHead = git(['rev-parse', 'HEAD']);
+  const remoteMain = git(['rev-parse', 'origin/main']);
+  assertMatchingRefs(localHead, remoteMain);
 }
 
 function listGitTags() {
@@ -191,7 +194,7 @@ function main(argv = process.argv.slice(2), env = process.env) {
     stdio: 'inherit',
   });
   git(['fetch', '--tags', 'origin'], { stdio: 'inherit' });
-  assertMainContainsOriginMain();
+  assertMainMatchesOriginMain();
 
   const releaseDate = resolveReleaseDate(env);
   const version = resolveNextVersion(releaseType, releaseDate, listGitTags());
@@ -222,5 +225,6 @@ module.exports = {
   parseReleaseTags,
   resolveNextVersion,
   resolveReleaseDate,
+  assertMatchingRefs,
   main,
 };
