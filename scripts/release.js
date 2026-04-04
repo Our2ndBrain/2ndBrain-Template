@@ -8,7 +8,13 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
+const pkg = require('../package.json');
 const RELEASE_TYPES = new Set(['stable', 'beta', 'hotfix']);
+const RELEASE_STAGE_ORDER = {
+  beta: 0,
+  stable: 1,
+  hotfix: 2,
+};
 const DATE_VERSION_PATTERN = /^(?<year>\d{4})\.(?<month>[1-9]\d*)\.(?<day>[1-9]\d*)$/;
 const RELEASE_TAG_PATTERN =
   /^v(?<base>\d{4}\.[1-9]\d*\.[1-9]\d*)(?:-(?:(?<hotfix>[1-9]\d*)|beta\.(?<beta>[1-9]\d*)))?$/;
@@ -67,21 +73,77 @@ function resolveReleaseDate(env = process.env, now = new Date()) {
   return dateVersion;
 }
 
+function parseReleaseVersion(version) {
+  const releaseTag = version.startsWith('v') ? version : `v${version}`;
+  const match = releaseTag.match(RELEASE_TAG_PATTERN);
+
+  if (!match) {
+    return null;
+  }
+
+  const [year, month, day] = match.groups.base.split('.').map(Number);
+  const stage = match.groups.beta ? 'beta' : match.groups.hotfix ? 'hotfix' : 'stable';
+
+  return {
+    tag: match[0],
+    base: match.groups.base,
+    year,
+    month,
+    day,
+    stage,
+    stageOrder: RELEASE_STAGE_ORDER[stage],
+    stageNumber: Number(match.groups.beta || match.groups.hotfix || 0),
+    beta: match.groups.beta ? Number(match.groups.beta) : null,
+    hotfix: match.groups.hotfix ? Number(match.groups.hotfix) : null,
+  };
+}
+
 function parseReleaseTags(tags) {
   return tags
     .map((tag) => tag.trim())
     .filter(Boolean)
-    .map((tag) => tag.match(RELEASE_TAG_PATTERN))
+    .map((tag) => parseReleaseVersion(tag))
     .filter(Boolean)
-    .map((match) => ({
-      tag: match[0],
-      base: match.groups.base,
-      beta: match.groups.beta ? Number(match.groups.beta) : null,
-      hotfix: match.groups.hotfix ? Number(match.groups.hotfix) : null,
+    .map((version) => ({
+      tag: version.tag,
+      base: version.base,
+      beta: version.beta,
+      hotfix: version.hotfix,
     }));
 }
 
-function resolveNextVersion(releaseType, releaseDate, tags) {
+function compareReleaseVersions(left, right) {
+  return (
+    left.year - right.year ||
+    left.month - right.month ||
+    left.day - right.day ||
+    left.stageOrder - right.stageOrder ||
+    left.stageNumber - right.stageNumber
+  );
+}
+
+function assertMonotonicVersion(version, tags, currentVersion = pkg.version) {
+  const nextVersion = parseReleaseVersion(version);
+  const existingVersions = [...tags, currentVersion]
+    .map((tag) => parseReleaseVersion(tag))
+    .filter(Boolean);
+
+  if (!nextVersion || existingVersions.length === 0) {
+    return;
+  }
+
+  const latestVersion = existingVersions.reduce((latest, candidate) =>
+    compareReleaseVersions(candidate, latest) > 0 ? candidate : latest
+  );
+
+  if (compareReleaseVersions(nextVersion, latestVersion) <= 0) {
+    throw new Error(
+      `Release version ${version} must be newer than current release line ${latestVersion.tag.slice(1)}.`
+    );
+  }
+}
+
+function resolveNextVersion(releaseType, releaseDate, tags, currentVersion = pkg.version) {
   const releaseTags = parseReleaseTags(tags);
   const sameDayTags = releaseTags.filter((tag) => tag.base === releaseDate);
   const hasStableTag = sameDayTags.some((tag) => tag.beta === null && tag.hotfix === null);
@@ -99,7 +161,9 @@ function resolveNextVersion(releaseType, releaseDate, tags) {
       );
     }
 
-    return releaseDate;
+    const version = releaseDate;
+    assertMonotonicVersion(version, tags, currentVersion);
+    return version;
   }
 
   if (releaseType === 'hotfix') {
@@ -110,7 +174,9 @@ function resolveNextVersion(releaseType, releaseDate, tags) {
     }
 
     const nextHotfix = Math.max(0, ...hotfixVersions) + 1;
-    return `${releaseDate}-${nextHotfix}`;
+    const version = `${releaseDate}-${nextHotfix}`;
+    assertMonotonicVersion(version, tags, currentVersion);
+    return version;
   }
 
   if (hasStableTag || hotfixVersions.length > 0) {
@@ -120,7 +186,9 @@ function resolveNextVersion(releaseType, releaseDate, tags) {
   }
 
   const nextBeta = Math.max(0, ...betaVersions) + 1;
-  return `${releaseDate}-beta.${nextBeta}`;
+  const version = `${releaseDate}-beta.${nextBeta}`;
+  assertMonotonicVersion(version, tags, currentVersion);
+  return version;
 }
 
 function assertMainBranch() {
@@ -178,8 +246,7 @@ function createRelease(version) {
     },
   });
 
-  git(['push', 'origin', 'HEAD:main'], { stdio: 'inherit' });
-  git(['push', 'origin', releaseTag], { stdio: 'inherit' });
+  git(['push', '--atomic', 'origin', 'HEAD:main', releaseTag], { stdio: 'inherit' });
 
   return releaseTag;
 }
@@ -222,7 +289,10 @@ module.exports = {
   DATE_VERSION_PATTERN,
   RELEASE_TAG_PATTERN,
   parseArgs,
+  parseReleaseVersion,
   parseReleaseTags,
+  compareReleaseVersions,
+  assertMonotonicVersion,
   resolveNextVersion,
   resolveReleaseDate,
   assertMatchingRefs,

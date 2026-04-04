@@ -4,7 +4,9 @@ const assert = require('node:assert/strict');
 const {
   DATE_VERSION_PATTERN,
   RELEASE_TAG_PATTERN,
+  assertMonotonicVersion,
   parseArgs,
+  parseReleaseVersion,
   parseReleaseTags,
   resolveNextVersion,
   resolveReleaseDate,
@@ -32,6 +34,20 @@ test('release tag parser accepts stable, beta, and hotfix tags only', () => {
     { tag: 'v2026.4.4-2', base: '2026.4.4', beta: null, hotfix: 2 },
     { tag: 'v2026.4.4-beta.3', base: '2026.4.4', beta: 3, hotfix: null },
   ]);
+
+  assert.deepEqual(parseReleaseVersion('2026.4.4-beta.3'), {
+    tag: 'v2026.4.4-beta.3',
+    base: '2026.4.4',
+    year: 2026,
+    month: 4,
+    day: 4,
+    stage: 'beta',
+    stageOrder: 0,
+    stageNumber: 3,
+    beta: 3,
+    hotfix: null,
+  });
+  assert.equal(parseReleaseVersion('1.1.3'), null);
 });
 
 test('release argument parser supports stable, beta, hotfix, and --dry-run', () => {
@@ -80,6 +96,18 @@ test('resolveNextVersion rejects conflicting same-day release lanes', () => {
     () => resolveNextVersion('beta', '2026.4.4', ['v2026.4.4']),
     /Cannot create 2026.4.4-beta.N after a same-day stable release/
   );
+});
+
+test('resolveNextVersion rejects versions older than tags or package.json', () => {
+  assert.throws(
+    () => resolveNextVersion('hotfix', '2026.4.4', ['v2026.4.4', 'v2026.4.5']),
+    /must be newer than current release line 2026\.4\.5/
+  );
+  assert.throws(
+    () => resolveNextVersion('stable', '2026.4.4', [], '2026.4.5'),
+    /must be newer than current release line 2026\.4\.5/
+  );
+  assert.doesNotThrow(() => assertMonotonicVersion('2026.4.5', ['v2026.4.4-beta.2']));
 });
 
 test('release requires local main HEAD to exactly match origin/main', () => {
