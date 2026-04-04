@@ -9,6 +9,7 @@ The workflows in this directory are split so pull requests get fast review signa
 - `codeql.yml` runs JavaScript/TypeScript code scanning.
 - `workflow-sanity.yml` validates workflow syntax and enforces action SHA pinning.
 - `labeler.yml` applies coarse-grained area labels for reviewer triage.
+- Pull requests should be opened as normal ready-for-review PRs, not draft PRs, so the final human action on GitHub Mobile is a single **Auto-merge** tap.
 
 ## Post-Merge On `main`
 
