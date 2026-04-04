@@ -10,8 +10,7 @@ const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const pkg = require('../package.json');
-const RELEASE_TAG_PATTERN =
-  /^v\d{4}\.[1-9]\d*\.[1-9]\d*(?:-(?:[1-9]\d*|beta\.[1-9]\d*))?$/;
+const { RELEASE_TAG_PATTERN, parseReleaseVersion } = require('./release');
 
 function git(args) {
   return execFileSync('git', args, {
@@ -27,8 +26,10 @@ function fail(message) {
 }
 
 function assertTagFormat(tag) {
-  if (!RELEASE_TAG_PATTERN.test(tag)) {
-    fail(`Invalid release tag: ${tag}. Expected vYYYY.M.D, vYYYY.M.D-N, or vYYYY.M.D-beta.N`);
+  if (!parseReleaseVersion(tag)) {
+    fail(
+      `Invalid release tag: ${tag}. Expected vYYYY.M.D, vYYYY.M.D-N, or vYYYY.M.D-beta.N with a real calendar date`
+    );
   }
 }
 
