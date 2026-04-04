@@ -226,7 +226,7 @@ jobs:
           fi
 
       - name: Publish npm package with provenance
-        run: npm publish "${{ steps.artifact.outputs.tarball-path }}" --access public --provenance --tag "${{ needs.preflight.outputs.npm-dist-tag }}"
+        run: npm publish "./${{ steps.artifact.outputs.tarball-path }}" --access public --provenance --tag "${{ needs.preflight.outputs.npm-dist-tag }}"
 
       - name: Create or update GitHub Release
         env:
