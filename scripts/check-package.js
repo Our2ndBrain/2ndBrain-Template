@@ -17,10 +17,10 @@ const REQUIRED_FILES = [
   'LICENSE',
   'bin/2ndbrain.js',
   'src/index.js',
-  '00_Dashboard/01_All_Tasks.md',
-  '10_Inbox/Agents/Journal.md',
-  '99_System/Templates/tpl_daily_note.md',
-  '.obsidian/community-plugins.json',
+  'template/00_Dashboard/01_All_Tasks.md',
+  'template/10_Inbox/Agents/Journal.md',
+  'template/99_System/Templates/tpl_daily_note.md',
+  'template/.obsidian/community-plugins.json',
 ];
 const DISALLOWED_PREFIXES = ['.github/', 'scripts/', 'test/'];
 

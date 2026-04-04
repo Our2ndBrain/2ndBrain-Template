@@ -7,7 +7,7 @@
 const path = require('path');
 
 // Template root directory (npm package root)
-const TEMPLATE_ROOT = path.resolve(__dirname, '../../');
+const TEMPLATE_ROOT = path.resolve(__dirname, '../../template');
 
 /**
  * Framework files - managed by init/update/remove commands
