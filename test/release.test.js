@@ -14,6 +14,8 @@ const {
   assertMatchingRefs,
 } = require('../scripts/release');
 
+const RELEASE_BASELINE_VERSION = '1.1.3';
+
 test('release date format requires YYYY.M.D without zero-padded month/day', () => {
   assert.equal(DATE_VERSION_PATTERN.test('2026.4.4'), true);
   assert.equal(DATE_VERSION_PATTERN.test('2026.12.31'), true);
@@ -83,35 +85,55 @@ test('resolveReleaseDate uses local calendar date and supports RELEASE_DATE over
 });
 
 test('resolveNextVersion creates stable, beta, and hotfix versions from existing tags', () => {
-  assert.equal(resolveNextVersion('stable', '2026.4.4', ['v1.1.3']), '2026.4.4');
   assert.equal(
-    resolveNextVersion('beta', '2026.4.4', ['v2026.4.4-beta.1', 'v2026.4.4-beta.2']),
+    resolveNextVersion('stable', '2026.4.4', ['v1.1.3'], RELEASE_BASELINE_VERSION),
+    '2026.4.4'
+  );
+  assert.equal(
+    resolveNextVersion(
+      'beta',
+      '2026.4.4',
+      ['v2026.4.4-beta.1', 'v2026.4.4-beta.2'],
+      RELEASE_BASELINE_VERSION
+    ),
     '2026.4.4-beta.3'
   );
   assert.equal(
-    resolveNextVersion('hotfix', '2026.4.4', ['v2026.4.4', 'v2026.4.4-1']),
+    resolveNextVersion(
+      'hotfix',
+      '2026.4.4',
+      ['v2026.4.4', 'v2026.4.4-1'],
+      RELEASE_BASELINE_VERSION
+    ),
     '2026.4.4-2'
   );
 });
 
 test('resolveNextVersion rejects conflicting same-day release lanes', () => {
   assert.throws(
-    () => resolveNextVersion('stable', '2026.4.4', ['v2026.4.4']),
+    () => resolveNextVersion('stable', '2026.4.4', ['v2026.4.4'], RELEASE_BASELINE_VERSION),
     /Stable release 2026.4.4 already exists/
   );
   assert.throws(
-    () => resolveNextVersion('hotfix', '2026.4.4', ['v2026.4.4-beta.1']),
+    () =>
+      resolveNextVersion('hotfix', '2026.4.4', ['v2026.4.4-beta.1'], RELEASE_BASELINE_VERSION),
     /Cannot create 2026.4.4-N before 2026.4.4 exists/
   );
   assert.throws(
-    () => resolveNextVersion('beta', '2026.4.4', ['v2026.4.4']),
+    () => resolveNextVersion('beta', '2026.4.4', ['v2026.4.4'], RELEASE_BASELINE_VERSION),
     /Cannot create 2026.4.4-beta.N after a same-day stable release/
   );
 });
 
 test('resolveNextVersion rejects versions older than tags or package.json', () => {
   assert.throws(
-    () => resolveNextVersion('hotfix', '2026.4.4', ['v2026.4.4', 'v2026.4.5']),
+    () =>
+      resolveNextVersion(
+        'hotfix',
+        '2026.4.4',
+        ['v2026.4.4', 'v2026.4.5'],
+        RELEASE_BASELINE_VERSION
+      ),
     /must be newer than current release line 2026\.4\.5/
   );
   assert.throws(
