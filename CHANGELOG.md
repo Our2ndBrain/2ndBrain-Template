@@ -21,9 +21,6 @@ and `YYYY.M.D-N`.
 - pin daily note task query to note date
 - correct file diff summary and add regression tests
 
-### Removed
-- remove unused `.ci/github/setup-auto-merge.sh` helper script
-
 ## [1.1.3] - 2026-01-18
 
 ### Added
