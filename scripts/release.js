@@ -435,6 +435,8 @@ function findReleaseWorkflowRun(releaseTag, mergeCommitSha, repositoryFullName) 
     gh([
       'api',
       `repos/${repositoryFullName}/actions/workflows/${path.basename(RELEASE_WORKFLOW_FILE)}/runs`,
+      '--method',
+      'GET',
       '-f',
       'event=push',
       '-f',
