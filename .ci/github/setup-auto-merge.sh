@@ -12,12 +12,12 @@ setup-auto-merge.sh
 2) 配置分支保护（required checks + required approvals）
 
 USAGE
-  bash .ci/github/setup-auto-merge.sh --checks "CI / test" [options]
+  bash .ci/github/setup-auto-merge.sh --checks "test" [options]
 
 REQUIRED
   --checks <csv>         必填。逗号分隔的 required status check 名称。
                          名称必须与 PR 页面 Checks 区域显示的 job 名称一致。
-                         示例："CI / test"
+                         示例："test"
 
 OPTIONS
   --repo <owner/name>    可选。目标仓库，默认自动检测当前 git 仓库。
@@ -56,7 +56,7 @@ WHAT THIS SCRIPT CHANGES
 EXAMPLES
   # 最简用法（自动识别当前仓库，分支 main，审批 1）
   bash .ci/github/setup-auto-merge.sh \
-    --checks "CI / test"
+    --checks "test"
 
   # 指定仓库和分支
   bash .ci/github/setup-auto-merge.sh \
@@ -64,7 +64,7 @@ EXAMPLES
     --branch main \
     --approvals 2 \
     --merge squash \
-    --checks "CI / test"
+    --checks "test"
 
 AFTER SETUP
   这个脚本只配置“自动合并能力”和“保护规则”。
@@ -189,7 +189,7 @@ if [[ -z "$REPO_SLUG" ]]; then
 fi
 
 if [[ -z "$CHECKS_CSV" ]]; then
-  echo "❌ --checks is required, e.g. --checks \"CI / test\""
+  echo "❌ --checks is required, e.g. --checks \"test\""
   echo
   usage
   exit 1
