@@ -4,12 +4,11 @@
     {
       "id": 1,
       "prompt": "帮我在 Windows 上设置 2ndBrain 知识库，我叫 Alice，知识库放在 D:\\Documents\\my-brain",
-      "expected_output": "Agent 运行 2ndbrain check 检测环境，引导从 GitHub 克隆安装，初始化知识库，全程不出现 PowerShell/cmd 特定命令。",
+      "expected_output": "Agent 运行 2ndbrain check 检测环境，引导使用 npx 或 npm 全局安装 CLI，初始化知识库，全程不出现 PowerShell/cmd 特定命令。",
       "files": [],
       "expectations": [
         "Agent 运行或提及 2ndbrain check 命令",
-        "Agent 提及 git clone 从 GitHub 克隆 CLI",
-        "Agent 提及 npm install 和 npm link",
+        "Agent 提及 npx 或 npm install -g 安装 CLI",
         "Agent 运行或提及 2ndbrain init 初始化知识库",
         "Agent 运行或提及 2ndbrain member Alice",
         "不出现 PowerShell（Set-Location、New-Item、$env:、Test-Path）、cmd（dir、findstr）、bat 等平台特定命令",

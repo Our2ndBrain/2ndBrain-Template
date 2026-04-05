@@ -6,8 +6,20 @@
 
 const path = require('path');
 
-// Template root directory (npm package root)
-const TEMPLATE_ROOT = path.resolve(__dirname, '../../template');
+// npm package root containing CLI docs and metadata
+const PACKAGE_ROOT = path.resolve(__dirname, '../..');
+
+// Vault template root containing shipped vault assets
+const TEMPLATE_ROOT = path.join(PACKAGE_ROOT, 'template');
+
+const PACKAGE_DOC_FILES = [
+  'AGENTS.md',
+  'README.md',
+  'README_en.md',
+  'CHANGELOG.md',
+  'CLAUDE.md',
+  'LICENSE',
+];
 
 /**
  * Framework files - managed by init/update/remove commands
@@ -16,6 +28,7 @@ const TEMPLATE_ROOT = path.resolve(__dirname, '../../template');
 const FRAMEWORK_FILES = [
   'AGENTS.md',
   'README.md',
+  'README_en.md',
   'CHANGELOG.md',
   'CLAUDE.md',
   'LICENSE',
@@ -85,6 +98,32 @@ function getTemplatePath(relativePath, templateRoot = TEMPLATE_ROOT) {
 }
 
 /**
+ * Check whether a framework file is sourced from the package root docs.
+ * @param {string} relativePath - Relative framework file path
+ * @returns {boolean}
+ */
+function isPackageDocFile(relativePath) {
+  return PACKAGE_DOC_FILES.includes(relativePath);
+}
+
+/**
+ * Resolve the source path for a framework file.
+ * Package docs come from the npm package root; vault assets come from template/.
+ * @param {string} relativePath - Relative framework file path
+ * @param {Object} [options]
+ * @param {string} [options.templateRoot] - Template directory override
+ * @param {string} [options.packageRoot] - Package root override
+ * @returns {string} Absolute source path
+ */
+function getFrameworkSourcePath(
+  relativePath,
+  { templateRoot = TEMPLATE_ROOT, packageRoot = PACKAGE_ROOT } = {}
+) {
+  const sourceRoot = isPackageDocFile(relativePath) ? packageRoot : templateRoot;
+  return path.join(sourceRoot, relativePath);
+}
+
+/**
  * Check if a path is a 2ndBrain project
  * @param {string} targetPath - Path to check
  * @returns {boolean}
@@ -100,7 +139,9 @@ function is2ndBrainProject(targetPath) {
 }
 
 module.exports = {
+  PACKAGE_ROOT,
   TEMPLATE_ROOT,
+  PACKAGE_DOC_FILES,
   FRAMEWORK_FILES,
   FRAMEWORK_DIRS,
   USER_DATA_DIRS,
@@ -109,5 +150,7 @@ module.exports = {
   INIT_ONLY_FILES,
   MARKER_FILE,
   getTemplatePath,
+  isPackageDocFile,
+  getFrameworkSourcePath,
   is2ndBrainProject,
 };

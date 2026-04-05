@@ -29,7 +29,8 @@
         "CHANGELOG.md",
         "CLAUDE.md",
         "LICENSE",
-        "README.md"
+        "README.md",
+        "README_en.md"
     ],
     "bugs": {
         "url": "https://github.com/Our2ndBrain/2ndBrain-Template/issues"

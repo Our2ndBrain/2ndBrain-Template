@@ -13,6 +13,7 @@ const MAX_PACKED_SIZE = 1_000_000;
 const MAX_UNPACKED_SIZE = 4_000_000;
 const REQUIRED_FILES = [
   'README.md',
+  'README_en.md',
   'CHANGELOG.md',
   'LICENSE',
   'bin/2ndbrain.js',
