@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses date-based release versions: `YYYY.M.D`, `YYYY.M.D-beta.N`,
 and `YYYY.M.D-N`.
 
+## [2026.4.5] - 2026-04-05
+
+### Added
+- automate protected-branch release flow (#16)
+
+### Changed
+- split repo docs from shipped template docs (#20)
+- remove obsolete GitHub auto-merge setup script (#19)
+- consolidate shipped vault assets under template directory (#18)
+
+### Fixed
+- publish release tarball from a local path (#15)
+
 ## [2026.4.4] - 2026-04-04
 
 ### Added
