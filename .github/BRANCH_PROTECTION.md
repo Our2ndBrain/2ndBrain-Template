@@ -28,7 +28,7 @@ Recommended required checks:
 Create a GitHub environment named `npm-release` and configure:
 
 - Required reviewers: `@pwkuan`
-- Deployment branches: protected branches and release tags only
+- Deployment branches: protected branches only
 - npm trusted publishing for package `@our2ndbrain/cli` must point to `.github/workflows/release.yml`
 
 ## Release flow
