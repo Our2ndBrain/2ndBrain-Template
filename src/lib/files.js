@@ -45,16 +45,19 @@ async function copyFile(src, dest) {
 /**
  * Copy multiple files from template to target
  * @param {string[]} files - Array of relative file paths
- * @param {string} templateRoot - Template root directory
+ * @param {string|Function} sourceRootOrResolver - Source root directory or resolver
  * @param {string} targetRoot - Target root directory
  * @param {Function} [onFile] - Callback for each file (relativePath, action)
  * @returns {Promise<{copied: string[], skipped: string[], errors: string[]}>}
  */
-async function copyFiles(files, templateRoot, targetRoot, onFile) {
+async function copyFiles(files, sourceRootOrResolver, targetRoot, onFile) {
   const result = { copied: [], skipped: [], errors: [] };
 
   for (const file of files) {
-    const src = await resolveSourcePath(path.join(templateRoot, file));
+    const requestedSrc = typeof sourceRootOrResolver === 'function'
+      ? sourceRootOrResolver(file)
+      : path.join(sourceRootOrResolver, file);
+    const src = await resolveSourcePath(requestedSrc);
     const dest = path.join(targetRoot, file);
 
     try {
@@ -302,7 +305,7 @@ async function copyFileWithCompare(src, dest, options = {}) {
 /**
  * Copy multiple files with smart comparison
  * @param {string[]} files - Array of relative file paths
- * @param {string} templateRoot - Template root directory
+ * @param {string|Function} sourceRootOrResolver - Source root directory or resolver
  * @param {string} targetRoot - Target root directory
  * @param {Object} options - Copy options
  * @param {boolean} [options.force] - Force copy even if equal
@@ -310,7 +313,7 @@ async function copyFileWithCompare(src, dest, options = {}) {
  * @param {Function} [onFile] - Callback for each file (relativePath, action, detail)
  * @returns {Promise<{copied: string[], skipped: string[], unchanged: string[], errors: string[], changes: Array}>}
  */
-async function copyFilesSmart(files, templateRoot, targetRoot, options = {}, onFile) {
+async function copyFilesSmart(files, sourceRootOrResolver, targetRoot, options = {}, onFile) {
   const result = {
     copied: [],
     skipped: [],
@@ -320,7 +323,9 @@ async function copyFilesSmart(files, templateRoot, targetRoot, options = {}, onF
   };
 
   for (const file of files) {
-    const src = path.join(templateRoot, file);
+    const src = typeof sourceRootOrResolver === 'function'
+      ? sourceRootOrResolver(file)
+      : path.join(sourceRootOrResolver, file);
     const dest = path.join(targetRoot, file);
 
     try {

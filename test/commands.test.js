@@ -36,6 +36,7 @@ test('init creates a project and refuses to reinitialize without --force', async
     assert.equal(await fs.pathExists(path.join(tempDir, 'AGENTS.md')), true);
     assert.equal(await fs.pathExists(path.join(tempDir, '00_Dashboard/01_All_Tasks.md')), true);
     assert.equal(await fs.pathExists(path.join(tempDir, '10_Inbox/Agents/Journal.md')), true);
+    assert.equal(await fs.pathExists(path.join(tempDir, 'README_en.md')), true);
     assert.equal(await fs.pathExists(path.join(tempDir, '20_Areas/.gitkeep')), true);
 
     await assert.rejects(
@@ -97,20 +98,24 @@ test('update dry-run reports changes without modifying files', async () => {
 test('update --yes refreshes framework files and member dashboards', async () => {
   const tempDir = await createTempDir();
   const readmePath = path.join(tempDir, 'README.md');
+  const readmeEnPath = path.join(tempDir, 'README_en.md');
   const memberDashboardPath = path.join(tempDir, '10_Inbox/Alex/01_Tasks.md');
 
   try {
     await init(tempDir, {}, createLog());
     await member('Alex', tempDir, { config: false }, createLog());
     await fs.writeFile(readmePath, '# stale readme\n', 'utf8');
+    await fs.writeFile(readmeEnPath, '# stale english readme\n', 'utf8');
     await fs.writeFile(memberDashboardPath, '# stale dashboard\n', 'utf8');
 
     await update(tempDir, { yes: true }, createLog());
 
     const readmeContent = await fs.readFile(readmePath, 'utf8');
+    const readmeEnContent = await fs.readFile(readmeEnPath, 'utf8');
     const dashboardContent = await fs.readFile(memberDashboardPath, 'utf8');
 
     assert.match(readmeContent, /# 🧠 2ndBrain/);
+    assert.match(readmeEnContent, /# 🧠 2ndBrain/);
     assert.match(dashboardContent, /# 📋 Alex's Tasks/);
     assert.match(dashboardContent, /filename includes To-Do/);
   } finally {

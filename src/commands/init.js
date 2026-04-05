@@ -7,6 +7,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 const {
+  PACKAGE_ROOT,
   TEMPLATE_ROOT,
   FRAMEWORK_FILES,
   FRAMEWORK_DIRS,
@@ -14,6 +15,7 @@ const {
   COPY_DIRS,
   SMART_COPY_DIRS,
   INIT_ONLY_FILES,
+  getFrameworkSourcePath,
   is2ndBrainProject,
 } = require('../lib/config');
 const { copyFiles, ensureDirs, createFile, isDirEmpty, copyFilesSmart } = require('../lib/files');
@@ -141,6 +143,7 @@ async function handleObsidianReset(obsidianSrc, obsidianDest, log, skipConfirmat
 async function init(targetPath, options, log) {
   const resolvedPath = path.resolve(targetPath);
   const templateRoot = options.template ? path.resolve(options.template) : TEMPLATE_ROOT;
+  const packageRoot = options.template ? path.resolve(templateRoot, '..') : PACKAGE_ROOT;
 
   log.info(`Initializing 2ndBrain project at: ${resolvedPath}`);
   log.info(`Using template from: ${templateRoot}`);
@@ -217,7 +220,7 @@ async function init(targetPath, options, log) {
   log.info('Copying framework files...');
   const fileResult = await copyFilesSmart(
     FRAMEWORK_FILES,
-    templateRoot,
+    (file) => getFrameworkSourcePath(file, { templateRoot, packageRoot }),
     resolvedPath,
     {},
     (file, action, detail) => {

@@ -8,9 +8,11 @@ const path = require('path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
 const {
+  PACKAGE_ROOT,
   TEMPLATE_ROOT,
   FRAMEWORK_FILES,
   SMART_COPY_DIRS,
+  getFrameworkSourcePath,
   is2ndBrainProject,
 } = require('../lib/config');
 const {
@@ -35,6 +37,7 @@ const { copyObsidianDirSmart, MERGE_STRATEGIES } = require('../lib/obsidian');
 async function update(targetPath, options, log) {
   const resolvedPath = path.resolve(targetPath);
   const templateRoot = options.template ? path.resolve(options.template) : TEMPLATE_ROOT;
+  const packageRoot = options.template ? path.resolve(templateRoot, '..') : PACKAGE_ROOT;
 
   log.info(`Updating 2ndBrain project at: ${resolvedPath}`);
   log.info(`Using template from: ${templateRoot}`);
@@ -47,21 +50,22 @@ async function update(targetPath, options, log) {
   }
 
   if (options.dryRun) {
-    await performDryRun(resolvedPath, templateRoot, log);
+    await performDryRun(resolvedPath, templateRoot, packageRoot, log);
     return;
   }
 
   // Main update flow
-  await performUpdate(resolvedPath, templateRoot, options, log);
+  await performUpdate(resolvedPath, templateRoot, packageRoot, options, log);
 }
 
 /**
  * Perform dry run - show what would be updated
  * @param {string} resolvedPath - Target project path
  * @param {string} templateRoot - Template root path
+ * @param {string} packageRoot - Package root path
  * @param {Function} log - Logger function
  */
-async function performDryRun(resolvedPath, templateRoot, log) {
+async function performDryRun(resolvedPath, templateRoot, packageRoot, log) {
   log.warn('[DRY RUN] No files will be modified.');
   log.info('');
 
@@ -69,7 +73,7 @@ async function performDryRun(resolvedPath, templateRoot, log) {
 
   const result = await copyFilesSmart(
     FRAMEWORK_FILES,
-    templateRoot,
+    (file) => getFrameworkSourcePath(file, { templateRoot, packageRoot }),
     resolvedPath,
     { dryRun: true },
     (file, action, detail) => {
@@ -163,17 +167,18 @@ async function performDryRun(resolvedPath, templateRoot, log) {
  * Perform the actual update with user confirmation
  * @param {string} resolvedPath - Target project path
  * @param {string} templateRoot - Template root path
+ * @param {string} packageRoot - Package root path
  * @param {Object} options - Command options
  * @param {boolean} [options.yes] - Auto-confirm all updates
  * @param {Function} log - Logger function
  */
-async function performUpdate(resolvedPath, templateRoot, options, log) {
+async function performUpdate(resolvedPath, templateRoot, packageRoot, options, log) {
   log.info('Analyzing framework files...');
 
   // First pass: analyze all files
   const analysis = await copyFilesSmart(
     FRAMEWORK_FILES,
-    templateRoot,
+    (file) => getFrameworkSourcePath(file, { templateRoot, packageRoot }),
     resolvedPath,
     {},
     (file, action, detail) => {
@@ -218,7 +223,7 @@ async function performUpdate(resolvedPath, templateRoot, options, log) {
   if (userChoice === 'all') {
     // Apply all changes
     for (const change of changes) {
-      const src = path.join(templateRoot, change.file);
+      const src = getFrameworkSourcePath(change.file, { templateRoot, packageRoot });
       const resolvedSrc = await resolveTemplateSourcePath(src, change.file);
       const dest = path.join(resolvedPath, change.file);
 
@@ -245,7 +250,7 @@ async function performUpdate(resolvedPath, templateRoot, options, log) {
     // Review each file individually
     for (const change of changes) {
       const file = change.file;
-      const src = path.join(templateRoot, file);
+      const src = getFrameworkSourcePath(file, { templateRoot, packageRoot });
       const resolvedSrc = await resolveTemplateSourcePath(src, file);
       const dest = path.join(resolvedPath, file);
 
