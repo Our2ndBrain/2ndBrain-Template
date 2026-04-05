@@ -143,7 +143,9 @@ test('resolveNextVersion rejects versions older than tags or package.json', () =
     () => resolveNextVersion('stable', '2026.4.4', [], '2026.4.5'),
     /must be newer than current release line 2026\.4\.5/
   );
-  assert.doesNotThrow(() => assertMonotonicVersion('2026.4.5', ['v2026.4.4-beta.2']));
+  assert.doesNotThrow(() =>
+    assertMonotonicVersion('2026.4.5', ['v2026.4.4-beta.2'], RELEASE_BASELINE_VERSION)
+  );
 });
 
 test('release requires local main HEAD to exactly match origin/main', () => {
