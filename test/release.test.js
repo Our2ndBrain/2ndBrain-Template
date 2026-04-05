@@ -13,7 +13,8 @@ const {
   resolveReleaseBranch,
   resolveReleaseDate,
   resolveRepositoryFullName,
-  resolveReleaseWorkflowRun,
+  parseRunIdFromUrl,
+  resolveWorkflowDispatchRun,
   assertMatchingRefs,
 } = require('../scripts/release');
 
@@ -176,49 +177,56 @@ test('resolveReleaseBranch generates a version-scoped release branch name', () =
   assert.match(resolveReleaseBranch('2026.4.4'), /^codex\/release-2026\.4\.4-\d+$/);
 });
 
-test('resolveReleaseWorkflowRun prefers the push-triggered run for the published tag', () => {
+test('parseRunIdFromUrl extracts GitHub Actions run ids', () => {
+  assert.equal(
+    parseRunIdFromUrl('https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/23995950417'),
+    23995950417
+  );
+  assert.equal(parseRunIdFromUrl('https://github.com/Our2ndBrain/2ndBrain-Template'), null);
+  assert.equal(parseRunIdFromUrl(''), null);
+});
+
+test('resolveWorkflowDispatchRun prefers the latest workflow_dispatch run for the merge commit', () => {
   assert.deepEqual(
-    resolveReleaseWorkflowRun(
+    resolveWorkflowDispatchRun(
       [
         {
-          id: 101,
           event: 'workflow_dispatch',
-          head_branch: 'main',
-          head_sha: 'abc123',
-          html_url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/101',
+          databaseId: 101,
+          headSha: 'abc123',
+          createdAt: '2026-04-05T06:00:00Z',
+          url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/101',
         },
         {
-          id: 102,
-          event: 'push',
-          head_branch: 'v2026.4.4',
-          head_sha: 'abc123',
-          html_url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/102',
+          event: 'workflow_dispatch',
+          databaseId: 102,
+          headSha: 'abc123',
+          createdAt: '2026-04-05T06:05:00Z',
+          url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/102',
         },
       ],
-      'v2026.4.4',
       'abc123'
     ),
     {
-      id: 102,
-      event: 'push',
-      head_branch: 'v2026.4.4',
-      head_sha: 'abc123',
-      html_url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/102',
+      event: 'workflow_dispatch',
+      databaseId: 102,
+      headSha: 'abc123',
+      createdAt: '2026-04-05T06:05:00Z',
+      url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/102',
     }
   );
 
   assert.equal(
-    resolveReleaseWorkflowRun(
+    resolveWorkflowDispatchRun(
       [
         {
-          id: 103,
           event: 'push',
-          head_branch: 'v2026.4.3',
-          head_sha: 'def456',
-          html_url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/103',
+          databaseId: 103,
+          headSha: 'def456',
+          createdAt: '2026-04-05T06:06:00Z',
+          url: 'https://github.com/Our2ndBrain/2ndBrain-Template/actions/runs/103',
         },
       ],
-      'v2026.4.4',
       'abc123'
     ),
     null

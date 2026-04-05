@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Open a release PR from origin/main, wait for merge, then publish the release tag.
+ * Open a release PR from origin/main, wait for merge, then dispatch the release workflow from main.
  */
 
 const { execFileSync } = require('child_process');
@@ -294,6 +294,15 @@ function resolveReleaseBranch(version) {
   return `codex/release-${version}-${Date.now()}`;
 }
 
+function parseRunIdFromUrl(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const match = value.match(/\/actions\/runs\/(?<id>\d+)/);
+  return match?.groups?.id ? Number(match.groups.id) : null;
+}
+
 function createReleaseCommit(version, releaseTag) {
   npm(['version', version], { stdio: 'inherit' });
   npm(['run', 'release:check'], {
@@ -367,18 +376,65 @@ function enableAutoMerge(prNumber, repositoryFullName) {
   ]);
 }
 
-function waitForPullRequestChecks(prNumber, repositoryFullName) {
-  gh(
-    [
-      'pr',
-      'checks',
-      String(prNumber),
-      '--repo',
-      repositoryFullName,
-      '--watch',
-    ],
-    { stdio: 'inherit' }
-  );
+function waitForPullRequestChecks(prNumber, repositoryFullName, startedAt = Date.now()) {
+  while (Date.now() - startedAt < RELEASE_TIMEOUT_MS) {
+    const pullRequest = JSON.parse(
+      gh([
+        'pr',
+        'view',
+        String(prNumber),
+        '--repo',
+        repositoryFullName,
+        '--json',
+        'state,url,statusCheckRollup',
+      ])
+    );
+
+    if (pullRequest.state === 'MERGED') {
+      return;
+    }
+
+    if (pullRequest.state === 'CLOSED') {
+      throw new Error(`Release PR was closed without merge: ${pullRequest.url}`);
+    }
+
+    const checks = Array.isArray(pullRequest.statusCheckRollup)
+      ? pullRequest.statusCheckRollup
+      : [];
+
+    if (checks.length === 0) {
+      sleep(RELEASE_POLL_INTERVAL_MS);
+      continue;
+    }
+
+    const failedCheck = checks.find((check) => {
+      const status = String(check.status || '').toLowerCase();
+      const conclusion = String(check.conclusion || '').toLowerCase();
+
+      return (
+        status === 'completed' &&
+        !['success', 'neutral', 'skipped'].includes(conclusion)
+      );
+    });
+
+    if (failedCheck) {
+      throw new Error(
+        `Release PR checks failed: ${failedCheck.name} (${failedCheck.detailsUrl || pullRequest.url})`
+      );
+    }
+
+    const pendingChecks = checks.filter(
+      (check) => String(check.status || '').toLowerCase() !== 'completed'
+    );
+
+    if (pendingChecks.length === 0) {
+      return;
+    }
+
+    sleep(RELEASE_POLL_INTERVAL_MS);
+  }
+
+  throw new Error(`Timed out waiting for checks on release PR #${prNumber}.`);
 }
 
 function waitForPullRequestMerge(prNumber, repositoryFullName, startedAt = Date.now()) {
@@ -419,38 +475,60 @@ function publishReleaseTag(releaseTag, mergeCommitSha) {
   git(['push', 'origin', releaseTag], { stdio: 'inherit' });
 }
 
-function resolveReleaseWorkflowRun(workflowRuns, releaseTag, mergeCommitSha) {
+function dispatchReleaseWorkflow(releaseTag, repositoryFullName) {
+  const output = gh([
+    'workflow',
+    'run',
+    RELEASE_WORKFLOW_FILE,
+    '--repo',
+    repositoryFullName,
+    '--ref',
+    'main',
+    '-f',
+    `tag=${releaseTag}`,
+    '-f',
+    'publish=true',
+  ]);
+
+  return {
+    url: output || null,
+    runId: parseRunIdFromUrl(output),
+  };
+}
+
+function resolveWorkflowDispatchRun(workflowRuns, mergeCommitSha) {
   return (
-    workflowRuns.find(
-      (workflowRun) =>
-        workflowRun.event === 'push' &&
-        workflowRun.head_branch === releaseTag &&
-        workflowRun.head_sha === mergeCommitSha
-    ) || null
+    [...workflowRuns]
+      .filter(
+        (workflowRun) =>
+          workflowRun.event === 'workflow_dispatch' &&
+          workflowRun.headSha === mergeCommitSha
+      )
+      .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))[0] || null
   );
 }
 
-function findReleaseWorkflowRun(releaseTag, mergeCommitSha, repositoryFullName) {
+function findDispatchedReleaseWorkflowRun(mergeCommitSha, repositoryFullName) {
   const workflowRuns = JSON.parse(
     gh([
-      'api',
-      `repos/${repositoryFullName}/actions/workflows/${path.basename(RELEASE_WORKFLOW_FILE)}/runs`,
-      '--method',
-      'GET',
-      '-f',
-      'event=push',
-      '-f',
-      `head_sha=${mergeCommitSha}`,
-      '-f',
-      'per_page=100',
+      'run',
+      'list',
+      '--repo',
+      repositoryFullName,
+      '--workflow',
+      path.basename(RELEASE_WORKFLOW_FILE),
+      '--branch',
+      'main',
+      '--event',
+      'workflow_dispatch',
+      '--json',
+      'databaseId,url,headSha,createdAt,event',
+      '--limit',
+      '20',
     ])
   );
 
-  return resolveReleaseWorkflowRun(
-    Array.isArray(workflowRuns.workflow_runs) ? workflowRuns.workflow_runs : [],
-    releaseTag,
-    mergeCommitSha
-  );
+  return resolveWorkflowDispatchRun(Array.isArray(workflowRuns) ? workflowRuns : [], mergeCommitSha);
 }
 
 function approvePendingDeployments(repositoryFullName, runId) {
@@ -491,29 +569,25 @@ function approvePendingDeployments(repositoryFullName, runId) {
 }
 
 function waitForReleaseWorkflow(
-  releaseTag,
   mergeCommitSha,
   repositoryFullName,
+  dispatchedRun = null,
   startedAt = Date.now()
 ) {
-  let runId = null;
+  let runId = dispatchedRun?.runId || null;
   let approvedDeployment = false;
 
   while (Date.now() - startedAt < RELEASE_TIMEOUT_MS) {
     if (!runId) {
-      const releaseRun = findReleaseWorkflowRun(
-        releaseTag,
-        mergeCommitSha,
-        repositoryFullName
-      );
+      const releaseRun = findDispatchedReleaseWorkflowRun(mergeCommitSha, repositoryFullName);
 
       if (!releaseRun) {
         sleep(RELEASE_POLL_INTERVAL_MS);
         continue;
       }
 
-      runId = releaseRun.id;
-      console.log(`Release workflow started: ${releaseRun.html_url}`);
+      runId = releaseRun.databaseId;
+      console.log(`Release workflow started: ${releaseRun.url}`);
     }
 
     const releaseRun = JSON.parse(
@@ -546,7 +620,7 @@ function waitForReleaseWorkflow(
   }
 
   throw new Error(
-    `Timed out waiting for release workflow run${runId ? ` ${runId}` : ''} for ${releaseTag}.`
+    `Timed out waiting for release workflow run${runId ? ` ${runId}` : ''} for ${mergeCommitSha}.`
   );
 }
 
@@ -599,7 +673,15 @@ function createRelease(version, originalBranch) {
       stdio: 'inherit',
     });
     publishReleaseTag(releaseTag, mergeResult.mergeCommitSha);
-    waitForReleaseWorkflow(releaseTag, mergeResult.mergeCommitSha, repositoryFullName);
+    const dispatchedRun = dispatchReleaseWorkflow(releaseTag, repositoryFullName);
+    if (dispatchedRun.url) {
+      console.log(`Release workflow dispatched: ${dispatchedRun.url}`);
+    }
+    waitForReleaseWorkflow(
+      mergeResult.mergeCommitSha,
+      repositoryFullName,
+      dispatchedRun
+    );
 
     const releaseUrl = verifyPublishedRelease(version, releaseTag, repositoryFullName);
     console.log(`Release ${releaseTag} published: ${releaseUrl}`);
@@ -659,7 +741,8 @@ module.exports = {
   resolveReleaseDate,
   resolveRepositoryFullName,
   resolveReleaseBranch,
-  resolveReleaseWorkflowRun,
+  parseRunIdFromUrl,
+  resolveWorkflowDispatchRun,
   assertMatchingRefs,
   main,
 };

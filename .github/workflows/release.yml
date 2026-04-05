@@ -1,9 +1,6 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
     inputs:
       tag:
@@ -20,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  group: release-${{ inputs.tag }}
   cancel-in-progress: false
 
 env:
@@ -39,16 +36,10 @@ jobs:
       - name: Resolve release metadata
         id: release-meta
         env:
-          EVENT_NAME: ${{ github.event_name }}
           INPUT_TAG: ${{ inputs.tag }}
-          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            release_tag="$INPUT_TAG"
-          else
-            release_tag="$REF_NAME"
-          fi
+          release_tag="$INPUT_TAG"
 
           if [[ ! "$release_tag" =~ ^v([0-9]{4})\.([1-9][0-9]*)\.([1-9][0-9]*)(-([1-9][0-9]*|beta\.[1-9][0-9]*))?$ ]]; then
             echo "Invalid release tag: $release_tag" >&2
@@ -159,7 +150,7 @@ jobs:
   publish:
     name: Publish Release
     needs: preflight
-    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
+    if: ${{ inputs.publish }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: npm-release
